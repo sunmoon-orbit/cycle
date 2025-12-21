@@ -232,11 +232,33 @@
       button:hover, .theme:hover{ transform:none; }
       .bg{ filter: blur(18px); }
     }
-  </style>
+  
+
+    /* Morandi：低饱和纯色风格（覆盖上面的渐变/光斑） */
+    body{ background: var(--bg0); }
+    .bg{ display:none; }
+    .card::before{ display:none; }
+    .dot{ background: var(--a); }
+    button.primary{
+      background: var(--a) !important;
+      border-color: rgba(0,0,0,.10) !important;
+      box-shadow: 0 10px 24px var(--shadow) !important;
+    }
+    button.primary:hover{ filter: brightness(.98); }
+    button.ghost{
+      background: rgba(255,255,255,.55) !important;
+      border-color: rgba(0,0,0,.08) !important;
+    }
+    button.ghost:hover{ filter: brightness(.98); }
+    button{ box-shadow: 0 10px 24px var(--shadow); }
+    input, textarea{
+      background: rgba(255,255,255,.70) !important;
+    }
+</style>
 
   <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#a78bfa">
+  <meta name="theme-color" content="#9aa3b2" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="小月历">
@@ -345,8 +367,10 @@
             </div>
           </div>
           <div class="actions">
-            <button class="primary" id="btnAdd">添加记录</button>
+            <button class="ghost" id="btnQuickStart">快速开始（今天）</button>
+            <button class="ghost" id="btnQuickEnd">快速结束（今天）</button>
             <button id="btnFillToday">开始=今天</button>
+            <button class="primary" id="btnAdd">添加记录</button>
             <button class="ghost" id="btnHelp">小提示</button>
           </div>
         </div>
@@ -448,10 +472,26 @@
     }
 
     const THEMES = {
-      lavender: { a:"#a78bfa", b:"#7dd3fc", c:"#f9a8d4", d:"#86efac", bg1:"#f7f3ff", bg2:"#f2fbff", bg3:"#fff0f8" },
-      mint:     { a:"#86efac", b:"#7dd3fc", c:"#a7f3d0", d:"#f9a8d4", bg1:"#f2fff7", bg2:"#f2fbff", bg3:"#f7fff9" },
-      peach:    { a:"#fdba74", b:"#f9a8d4", c:"#fda4af", d:"#93c5fd", bg1:"#fff4ea", bg2:"#fff0f8", bg3:"#f3f9ff" },
-      mono:     { a:"#c7c7d1", b:"#9aa3b2", c:"#b8b8c6", d:"#cbd5e1", bg1:"#f6f7fb", bg2:"#f4f6ff", bg3:"#f7f7fb" },
+      lavender: { // 雾紫
+        a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
+        bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA",
+        shadow:"rgba(25, 30, 40, .12)"
+      },
+      mint: { // 鼠尾草
+        a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
+        bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE",
+        shadow:"rgba(20, 30, 25, .12)"
+      },
+      peach: { // 燕麦杏
+        a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
+        bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6",
+        shadow:"rgba(35, 28, 25, .12)"
+      },
+      sea: { // 雾蓝
+        a:"#8EA2B5", b:"#A6B6C5", c:"#B7B0B6", d:"#9DAFB3",
+        bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC",
+        shadow:"rgba(18, 28, 40, .12)"
+      }
     };
     function hexToRgba(hex, a){
       const h = hex.replace("#","");
@@ -796,9 +836,44 @@
       $("modalBackdrop").setAttribute("aria-hidden","true");
     }
 
+    // 快速添加
+    function quickStartToday(){
+      const today = todayKey();
+      const openIdx = state.records.findIndex(r => !r.end);
+      if(openIdx !== -1){
+        toast("你已经有一条未结束的记录啦～先结束它再开始新的一条。( ´ ▽ ` )ﾉ");
+        return;
+      }
+      state.records.unshift({ start: today, end: "", note: "" });
+      saveState();
+      renderAll();
+      toast("已快速开始：今天 ✅");
+    }
+
+    function quickEndToday(){
+      const today = todayKey();
+      const idx = state.records.findIndex(r => !r.end);
+      if(idx === -1){
+        toast("没有找到“进行中”的记录～先点“快速开始”再结束。(๑•̀ㅂ•́)و✧");
+        return;
+      }
+      const r = state.records[idx];
+      if(today < r.start){
+        toast("今天比开始日期更早？我先不结束，检查一下日期吧～");
+        return;
+      }
+      r.end = today;
+      saveState();
+      renderAll();
+      toast("已快速结束：今天 ✅");
+    }
+
+
     // bind
     $("btnAdd").addEventListener("click", addRecord);
     $("btnFillToday").addEventListener("click", ()=>{ $("start").value = todayKey(); toast("开始日期已填今天。","✓"); });
+    $("btnQuickStart").addEventListener("click", quickStartToday);
+    $("btnQuickEnd").addEventListener("click", quickEndToday);
     $("btnHelp").addEventListener("click", ()=> toast("小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
 
     $("btnExport").addEventListener("click", exportJSON);

@@ -1,5 +1,5 @@
 /* PWA Service Worker - cute_cycle_tracker */
-const CACHE_NAME = "cute-cycle-cache-20251221013409";
+const CACHE_NAME = "cute-cycle-cache-20251221030919";
 const PRECACHE_URLS = [
   "./",
   "./index.html",
