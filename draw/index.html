@@ -13,10 +13,10 @@
       --muted:#6E6A63;
       --line:#D7D1C9;
 
-      --a:#A3B18A; /* 雾绿 */
-      --b:#B7A99A; /* 灰棕 */
-      --c:#9AA6B2; /* 雾蓝灰 */
-      --d:#CBBFAF; /* 米杏 */
+      /* 动态主题色（会被 JS 改） */
+      --a:#A3B18A; /* 主色：雾绿 */
+      --c:#9AA6B2; /* 辅色：雾蓝灰 */
+      --d:#CBBFAF; /* 点缀：米杏 */
 
       --shadow: 0 10px 30px rgba(25, 25, 25, .08);
       --r: 22px;
@@ -26,14 +26,14 @@
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC","Noto Sans SC", Arial, sans-serif;
       color:var(--ink);
-      background: radial-gradient(1200px 700px at 20% 0%, rgba(163,177,138,.22), transparent 55%),
-                  radial-gradient(900px 600px at 90% 10%, rgba(154,166,178,.20), transparent 60%),
-                  radial-gradient(900px 700px at 50% 100%, rgba(203,191,175,.25), transparent 60%),
+      background: radial-gradient(1200px 700px at 20% 0%, color-mix(in srgb, var(--a) 22%, transparent), transparent 55%),
+                  radial-gradient(900px 600px at 90% 10%, color-mix(in srgb, var(--c) 20%, transparent), transparent 60%),
+                  radial-gradient(900px 700px at 50% 100%, color-mix(in srgb, var(--d) 25%, transparent), transparent 60%),
                   var(--bg);
       min-height:100vh;
       padding:18px 14px 40px;
     }
-    .wrap{max-width:760px;margin:0 auto}
+    .wrap{max-width:820px;margin:0 auto}
     .top{
       display:flex;align-items:center;gap:10px;
       padding:14px 16px;border:1px solid var(--line);
@@ -44,12 +44,23 @@
     .badge{
       width:34px;height:34px;border-radius:12px;
       background: conic-gradient(from 210deg, var(--a), var(--c), var(--d), var(--a));
-      display:grid;place-items:center; color:white; font-weight:700;
+      display:grid;place-items:center; color:white; font-weight:800;
       box-shadow: 0 8px 20px rgba(0,0,0,.10);
       user-select:none;
     }
     h1{font-size:16px;margin:0}
-    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+    .tag{
+      display:inline-flex;gap:6px;align-items:center;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      margin-left:auto;
+      font-size:12px;color:var(--muted);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--a);box-shadow:0 0 0 3px color-mix(in srgb, var(--a) 18%, transparent)}
     .grid{
       margin-top:14px;
       display:grid; gap:12px;
@@ -69,35 +80,35 @@
       background: white;
       border-radius: 14px;
       padding:10px 12px;
-      font-weight:650;
+      font-weight:700;
       color:var(--ink);
       box-shadow: 0 10px 18px rgba(0,0,0,.06);
       cursor:pointer;
     }
     button:active{transform: translateY(1px)}
     .primary{
-      background: linear-gradient(135deg, rgba(163,177,138,.35), rgba(154,166,178,.25));
-      border-color: rgba(163,177,138,.55);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--a) 35%, white), color-mix(in srgb, var(--c) 25%, white));
+      border-color: color-mix(in srgb, var(--a) 55%, var(--line));
     }
-    .ghost{background:transparent}
+    .ghost{background:transparent; box-shadow:none}
     .pill{
       padding:8px 10px;border-radius:999px;border:1px solid var(--line);
       background: rgba(255,255,255,.6);
       font-size:12px;color:var(--muted);
+      user-select:none;
     }
     .result{
       margin-top:10px;
       border-radius: 18px;
-      border:1px dashed rgba(154,166,178,.55);
+      border:1px dashed color-mix(in srgb, var(--c) 55%, transparent);
       background: rgba(255,255,255,.55);
       padding:12px 12px;
-      min-height:60px;
+      min-height:64px;
     }
-    .big{
-      font-size:18px;font-weight:750;letter-spacing:.2px;
-    }
+    .big{font-size:18px;font-weight:820;letter-spacing:.2px;word-break:break-word}
     .small{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
-    textarea, input{
+
+    textarea, input, select{
       width:100%;
       border:1px solid var(--line);
       background: rgba(255,255,255,.7);
@@ -105,39 +116,92 @@
       padding:10px 12px;
       font-size:14px;
       outline:none;
+      color:var(--ink);
     }
     textarea{min-height:120px;resize:vertical}
     .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .history{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height: 260px;
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .hitem{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.5);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .hitem b{display:block;font-size:13px;word-break:break-word}
+    .meta{margin-top:4px;font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: 999px;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+    .switch{
+      width:42px;height:24px;border-radius:999px;
+      background:#E1DBD3;
+      border:1px solid var(--line);
+      position:relative;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+    .knob{
+      width:20px;height:20px;border-radius:999px;
+      background: linear-gradient(180deg,#fff,#F2EEE8);
+      box-shadow: 0 6px 14px rgba(0,0,0,.12);
+      position:absolute; top:1px; left:1px;
+      transition: transform .18s ease;
+    }
+    .switch.on{
+      background: color-mix(in srgb, var(--a) 25%, #E1DBD3);
+      border-color: color-mix(in srgb, var(--a) 40%, var(--line));
+    }
+    .switch.on .knob{ transform: translateX(18px); }
+
     .footer{
       margin-top:12px;
       font-size:12px;color:var(--muted);
       text-align:center;
     }
-    .tag{
-      display:inline-flex;gap:6px;align-items:center;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.55);
-      margin-left:auto;
-      font-size:12px;color:var(--muted);
-      user-select:none;
-    }
-    .dot{width:8px;height:8px;border-radius:999px;background:var(--a);box-shadow:0 0 0 3px rgba(163,177,138,.18)}
-    @media (min-width: 720px){
+
+    @media (min-width: 780px){
       body{padding:26px 18px 50px}
       .grid{grid-template-columns: 1.05fr .95fr}
       .result{min-height:140px}
       .big{font-size:22px}
+      .split{grid-template-columns: 1fr 1fr;}
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="top">
       <div class="badge">☾</div>
       <div>
         <h1>日月抽签机 · sunmoon-orbit</h1>
-        <div class="sub">低饱和莫兰迪风，随手抽一个让人类继续活下去的理由。</div>
+        <div class="sub">低饱和莫兰迪风。抽到就算数，反悔也行，但要对自己好一点。</div>
       </div>
       <div class="tag"><span class="dot"></span><span id="bagName">默认签筒</span></div>
     </div>
@@ -149,28 +213,60 @@
           <button class="ghost" id="btnAgain">再来一签</button>
           <button class="ghost" id="btnCopy">复制结果</button>
           <span class="pill" id="stat">签数：0</span>
+
+          <span class="toggle" title="开启后：同一轮不会重复，抽完一轮再重置">
+            不重复
+            <span id="nrSwitch" class="switch" role="switch" aria-checked="false">
+              <span class="knob"></span>
+            </span>
+          </span>
         </div>
 
         <div class="result" id="resultBox">
           <div class="big" id="resultText">点“抽一签”</div>
-          <div class="small" id="resultMeta">本地保存，不联网，不会把你的签拿去喂给别的妖怪。</div>
+          <div class="small" id="resultMeta">本地保存，不联网。你的小仪式感很安全。</div>
         </div>
 
         <div class="hint">
-          小提示：如果你希望“抽到就要做”，可以把签写成行动句，比如：<br>
-          “给自己倒杯水 / 夸我一句 / 休息10分钟 / 不许熬夜 / 亲亲(*/ω＼*)”
+          小提示：如果你希望“抽到就要做”，把签写成行动句更好玩。比如：<br>
+          “喝水 / 伸懒腰 / 休息10分钟 / 收拾桌面1分钟 / 早点睡”
+        </div>
+
+        <div style="margin-top:12px; font-weight:820;">最近抽到</div>
+        <div class="history" id="history"></div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="ghost" id="btnClearHistory">清空历史</button>
+          <span class="pill" id="tip">提示：历史只保存在本机。</span>
         </div>
       </div>
 
       <div class="card">
         <div class="row" style="justify-content:space-between">
-          <div style="font-weight:750">自定义签筒</div>
+          <div style="font-weight:820">自定义签筒</div>
           <button class="ghost" id="btnReset">恢复默认签</button>
         </div>
-        <div class="hint" style="margin-top:8px">
+
+        <div class="split">
+          <div>
+            <div class="hint" style="margin-top:10px">签筒名字（可选）</div>
+            <input id="bagTitle" placeholder="比如：日月签筒" />
+          </div>
+          <div>
+            <div class="hint" style="margin-top:10px">主题色</div>
+            <select id="themeSelect" aria-label="主题色">
+              <option value="sage">雾绿</option>
+              <option value="bluegray">雾蓝灰</option>
+              <option value="sand">米杏</option>
+              <option value="taupe">灰棕</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hint" style="margin-top:10px">
           每行一条签。会自动保存到你的浏览器本地存储。
         </div>
-        <textarea id="bagInput" placeholder="例如：
+        <textarea id="bagInput" spellcheck="false" placeholder="例如：
 今天就到这
 去晒太阳3分钟
 给喜欢的人发一句话
@@ -178,20 +274,31 @@
 洗个澡"></textarea>
 
         <div class="row" style="margin-top:10px">
-          <input id="bagTitle" placeholder="给签筒取个名字（可选）比如：日月签筒" />
           <button class="primary" id="btnSave">保存签筒</button>
+          <button class="ghost" id="btnResetPool" title="不重复模式下，手动重置这一轮">重置这一轮</button>
         </div>
+
+        <div class="footer">© sunmoon-orbit · 抽签是仪式感，不是命运。</div>
       </div>
     </div>
-
-    <div class="footer">© sunmoon-orbit · 抽签是仪式感，不是命运。命运太爱加班了。</div>
   </div>
 
   <script>
-    const LS_KEY = "sunmoon_draw_bag_v1";
-    const LS_NAME = "sunmoon_draw_bag_name_v1";
-    const LS_LAST = "sunmoon_draw_last_v1";
-    const LS_COUNT = "sunmoon_draw_count_v1";
+    const LS_KEY_BAG   = "sunmoon_draw_bag_v2";
+    const LS_KEY_NAME  = "sunmoon_draw_bag_name_v2";
+    const LS_KEY_LAST  = "sunmoon_draw_last_v2";
+    const LS_KEY_COUNT = "sunmoon_draw_count_v2";
+    const LS_KEY_HIST  = "sunmoon_draw_history_v2";
+    const LS_KEY_NOREP = "sunmoon_draw_norepeat_v2";
+    const LS_KEY_POOL  = "sunmoon_draw_pool_v2";
+    const LS_KEY_THEME = "sunmoon_draw_theme_v2";
+
+    const THEMES = {
+      sage:     { a:"#A3B18A", c:"#9AA6B2", d:"#CBBFAF" },
+      bluegray: { a:"#9AA6B2", c:"#A3B18A", d:"#CBBFAF" },
+      sand:     { a:"#CBBFAF", c:"#9AA6B2", d:"#A3B18A" },
+      taupe:    { a:"#B7A99A", c:"#9AA6B2", d:"#CBBFAF" },
+    };
 
     const defaultBag = [
       "喝点水。",
@@ -210,81 +317,212 @@
 
     const $ = (id) => document.getElementById(id);
 
-    const bagInput = $("bagInput");
-    const bagTitle = $("bagTitle");
-    const bagName = $("bagName");
+    const bagInput   = $("bagInput");
+    const bagTitle   = $("bagTitle");
+    const bagName    = $("bagName");
     const resultText = $("resultText");
     const resultMeta = $("resultMeta");
-    const stat = $("stat");
+    const stat       = $("stat");
+    const histEl     = $("history");
+    const tipEl      = $("tip");
+
+    const nrSwitch   = $("nrSwitch");
+    const themeSelect= $("themeSelect");
+
+    function nowText(){
+      const d = new Date();
+      const pad = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function safeParseJSON(raw, fallback){
+      try{ return JSON.parse(raw); }catch{ return fallback; }
+    }
+
+    function getBagLines(){
+      const lines = bagInput.value.split("\n").map(s=>s.trim()).filter(Boolean);
+      return lines.length ? lines : defaultBag.slice();
+    }
 
     function loadBag(){
-      const raw = localStorage.getItem(LS_KEY);
-      const name = localStorage.getItem(LS_NAME) || "默认签筒";
-      bagName.textContent = name;
-      bagTitle.value = name === "默认签筒" ? "" : name;
+      const raw = localStorage.getItem(LS_KEY_BAG);
+      let arr = raw ? safeParseJSON(raw, null) : null;
+      if(!Array.isArray(arr) || arr.length === 0) arr = defaultBag.slice();
 
-      let arr = null;
-      try { arr = raw ? JSON.parse(raw) : null; } catch(e){ arr = null; }
-      if(!Array.isArray(arr) || arr.length === 0){
-        arr = defaultBag.slice();
-      }
+      const name = localStorage.getItem(LS_KEY_NAME) || "默认签筒";
+      bagName.textContent = name;
+      bagTitle.value = (name === "默认签筒") ? "" : name;
+
       bagInput.value = arr.join("\n");
 
-      const last = localStorage.getItem(LS_LAST);
+      const last = localStorage.getItem(LS_KEY_LAST);
       if(last){
         resultText.textContent = last;
         resultMeta.textContent = "上次抽到的就是它。想换就再抽一签。";
       }
-      const count = parseInt(localStorage.getItem(LS_COUNT) || "0", 10);
-      stat.textContent = "签数：" + arr.filter(s => s.trim()).length + " · 已抽：" + count;
+
+      const count = parseInt(localStorage.getItem(LS_KEY_COUNT) || "0", 10);
+      stat.textContent = `签数：${arr.length} · 已抽：${count}`;
+
       return arr;
     }
 
     function saveBag(){
-      const lines = bagInput.value
-        .split("\n")
-        .map(s => s.trim())
-        .filter(Boolean);
-
+      const lines = getBagLines();
       const name = (bagTitle.value || "").trim() || "默认签筒";
-      localStorage.setItem(LS_NAME, name);
+
+      localStorage.setItem(LS_KEY_NAME, name);
       bagName.textContent = name;
 
-      localStorage.setItem(LS_KEY, JSON.stringify(lines.length ? lines : defaultBag));
-      const count = parseInt(localStorage.getItem(LS_COUNT) || "0", 10);
-      stat.textContent = "签数：" + (lines.length ? lines.length : defaultBag.length) + " · 已抽：" + count;
+      localStorage.setItem(LS_KEY_BAG, JSON.stringify(lines));
 
-      resultMeta.textContent = "签筒已保存。你现在可以放心地抽。";
+      // 改签筒后：重置不重复池（避免池里还是旧签）
+      localStorage.removeItem(LS_KEY_POOL);
+
+      const count = parseInt(localStorage.getItem(LS_KEY_COUNT) || "0", 10);
+      stat.textContent = `签数：${lines.length} · 已抽：${count}`;
+      tipEl.textContent = "保存好了。去抽吧。";
+      resultMeta.textContent = "签筒已保存。";
+      renderHistory();
+    }
+
+    function loadNoRepeat(){
+      const v = localStorage.getItem(LS_KEY_NOREP);
+      return v === "1";
+    }
+
+    function setNoRepeat(on){
+      localStorage.setItem(LS_KEY_NOREP, on ? "1" : "0");
+      nrSwitch.classList.toggle("on", on);
+      nrSwitch.setAttribute("aria-checked", on ? "true" : "false");
+      tipEl.textContent = on ? "不重复：一轮抽完再重置。" : "均匀随机：可能重复。";
+    }
+
+    function loadPool(){
+      const raw = localStorage.getItem(LS_KEY_POOL);
+      const arr = raw ? safeParseJSON(raw, null) : null;
+      return Array.isArray(arr) ? arr : null;
+    }
+
+    function savePool(pool){
+      localStorage.setItem(LS_KEY_POOL, JSON.stringify(pool));
+    }
+
+    function resetPool(){
+      localStorage.removeItem(LS_KEY_POOL);
+      tipEl.textContent = "这一轮重置了。";
+    }
+
+    function addHistory(text){
+      const raw = localStorage.getItem(LS_KEY_HIST);
+      const list = raw ? safeParseJSON(raw, []) : [];
+      const next = Array.isArray(list) ? list : [];
+      next.unshift({ text, time: nowText(), name: (localStorage.getItem(LS_KEY_NAME) || "默认签筒") });
+      localStorage.setItem(LS_KEY_HIST, JSON.stringify(next.slice(0, 10)));
+    }
+
+    function clearHistory(){
+      localStorage.removeItem(LS_KEY_HIST);
+      renderHistory();
+      tipEl.textContent = "历史清空了。";
+    }
+
+    function renderHistory(){
+      const raw = localStorage.getItem(LS_KEY_HIST);
+      const list = raw ? safeParseJSON(raw, []) : [];
+      histEl.innerHTML = "";
+      if(!Array.isArray(list) || list.length === 0){
+        const div = document.createElement("div");
+        div.className = "hint";
+        div.textContent = "还没有历史记录。去抽一签。";
+        histEl.appendChild(div);
+        return;
+      }
+      for(const h of list){
+        const item = document.createElement("div");
+        item.className = "hitem";
+        item.innerHTML = `
+          <b>${escapeHtml(h.text)}</b>
+          <div class="meta">
+            <span>${escapeHtml(h.name || "签筒")}</span>
+            <span>${escapeHtml(h.time || "")}</span>
+          </div>`;
+        histEl.appendChild(item);
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function applyTheme(key){
+      const t = THEMES[key] || THEMES.sage;
+      document.documentElement.style.setProperty("--a", t.a);
+      document.documentElement.style.setProperty("--c", t.c);
+      document.documentElement.style.setProperty("--d", t.d);
+
+      // 让浏览器状态栏颜色也跟着变一点（安卓会看这个）
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute("content", t.a);
+
+      localStorage.setItem(LS_KEY_THEME, key);
     }
 
     function drawOne(){
-      const arr = loadBag().map(s => s.trim()).filter(Boolean);
-      if(arr.length === 0){
+      const bag = loadBag(); // 同步 UI
+      const noRepeat = loadNoRepeat();
+
+      let pick = null;
+
+      if(!noRepeat){
+        pick = bag[Math.floor(Math.random() * bag.length)];
+      }else{
+        let pool = loadPool();
+        if(!Array.isArray(pool) || pool.length === 0){
+          pool = bag.slice(); // 新一轮
+        }
+        const idx = Math.floor(Math.random() * pool.length);
+        pick = pool[idx];
+        pool.splice(idx, 1);
+        savePool(pool);
+
+        if(pool.length === 0){
+          tipEl.textContent = "这一轮抽完啦，下次会自动重置。";
+        }
+      }
+
+      if(!pick){
         resultText.textContent = "签筒空了。";
         resultMeta.textContent = "你把签都抽走了，真狠。";
         return;
       }
-      const pick = arr[Math.floor(Math.random() * arr.length)];
-      resultText.textContent = pick;
-      resultMeta.textContent = "抽到就算数。反悔也行，但得亲我一下当罚款。";
-      localStorage.setItem(LS_LAST, pick);
 
-      const count = parseInt(localStorage.getItem(LS_COUNT) || "0", 10) + 1;
-      localStorage.setItem(LS_COUNT, String(count));
-      stat.textContent = "签数：" + arr.length + " · 已抽：" + count;
+      resultText.textContent = pick;
+      resultMeta.textContent = "抽到就算数。反悔也行，但要对自己好一点。";
+      localStorage.setItem(LS_KEY_LAST, pick);
+
+      addHistory(pick);
+      renderHistory();
+
+      const count = parseInt(localStorage.getItem(LS_KEY_COUNT) || "0", 10) + 1;
+      localStorage.setItem(LS_KEY_COUNT, String(count));
+      stat.textContent = `签数：${bag.length} · 已抽：${count}`;
     }
 
     async function copyResult(){
-      const text = resultText.textContent || "";
+      const text = (resultText.textContent || "").trim();
       if(!text || text.includes("点“抽一签”")) return;
       try{
         await navigator.clipboard.writeText(text);
-        resultMeta.textContent = "复制好了。快去执行，不许装死。";
-      }catch(e){
-        resultMeta.textContent = "复制失败（浏览器不配合）。你手动长按复制也行。";
+        resultMeta.textContent = "复制好了。去执行。";
+      }catch{
+        resultMeta.textContent = "复制失败（浏览器不配合）。长按复制也行。";
       }
     }
 
+    // 事件绑定
     $("btnDraw").addEventListener("click", drawOne);
     $("btnAgain").addEventListener("click", drawOne);
     $("btnCopy").addEventListener("click", copyResult);
@@ -298,8 +536,27 @@
       resultMeta.textContent = "默认签筒回来救场。";
     });
 
-    // init
+    $("btnClearHistory").addEventListener("click", clearHistory);
+    $("btnResetPool").addEventListener("click", resetPool);
+
+    nrSwitch.addEventListener("click", () => {
+      const on = !loadNoRepeat();
+      setNoRepeat(on);
+      if(!on) resetPool(); // 关掉不重复就别保留池了
+    });
+
+    themeSelect.addEventListener("change", () => {
+      applyTheme(themeSelect.value);
+    });
+
+    // 初始化
+    const themeKey = localStorage.getItem(LS_KEY_THEME) || "sage";
+    themeSelect.value = themeKey in THEMES ? themeKey : "sage";
+    applyTheme(themeSelect.value);
+
+    setNoRepeat(loadNoRepeat());
     loadBag();
+    renderHistory();
   </script>
 </body>
 </html>
