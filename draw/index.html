@@ -255,13 +255,23 @@
     function safeParse(raw, fallback){
       try { return JSON.parse(raw); } catch { return fallback; }
     }
+function getBag(){
+  const raw = localStorage.getItem(LS_BAG);
 
-    function getBag(){
-      const raw = localStorage.getItem(LS_BAG);
-      let bag = raw ? safeParse(raw, null) : null;
-      if (!Array.isArray(bag) || bag.length === 0) bag = defaultBag.slice();
-      return bag;
-    }
+  // 只有第一次完全没有存档时，才把默认签筒写进去
+  if(!raw){
+    localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
+    return defaultBag.slice();
+  }
+
+  let bag = safeParse(raw, null);
+  if(!Array.isArray(bag) || bag.length === 0){
+  localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
+  return defaultBag.slice();
+  }
+  return bag;
+}
+   
 
     function getName(){
       return localStorage.getItem(LS_NAME) || "默认签筒";
