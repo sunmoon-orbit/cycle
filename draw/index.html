@@ -308,8 +308,17 @@ function getBag(){
       const bag = lines.length ? lines : defaultBag.slice();
       const name = (bagTitle.value || "").trim() || "默认签筒";
 
-      localStorage.setItem(LS_BAG, JSON.stringify(bag));
-      localStorage.setItem(LS_NAME, name);
+      try {
+  localStorage.setItem(LS_BAG, JSON.stringify(bag));
+  localStorage.setItem(LS_NAME, name);
+
+  const check = localStorage.getItem(LS_BAG);
+  if (!check) throw new Error("LS_BAG write failed");
+} catch (e) {
+  saveTip.textContent = "保存失败：浏览器阻止本地存储/被清空了";
+  console.error(e);
+  return;
+      }
 
       bagName.textContent = name;
       stat.textContent = `签数：${bag.length}`;
