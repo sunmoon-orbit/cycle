@@ -17,6 +17,27 @@
       --shadow:0 10px 28px rgba(0,0,0,.08);
       --r:22px;
     }
+  #customArea textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:12px 12px;
+  background:rgba(255,255,255,.55);
+  color:var(--ink);
+  outline:none;
+  resize:vertical;
+}
+#customArea .row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+#customArea .hint{
+  color:var(--muted);
+  font-size:13px;
+  margin:8px 0;
+}
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -150,12 +171,27 @@
         <div class="row">
           <button class="primary" id="btnDraw">抽一签</button>
           <button class="ghost" id="btnCopy">复制结果</button>
+          
           <button class="ghost" id="btnClearLast">清空展示</button>
           <span class="pill" id="stat">签数：0</span>
         </div>
 
         <div class="result">
           <div class="big" id="resultText">点“抽一签”</div>
+          <section class="card" id="customArea">
+  <h2>自定义签筒</h2>
+  <p class="hint">每行一条签。会保存到本地（只在你的浏览器里）。</p>
+
+  <textarea id="customInput" rows="6" placeholder="例：\n喝口水\n伸伸懒腰\n看窗外两分钟"></textarea>
+
+  <div class="row">
+    <button id="btnSaveCustom" type="button">保存自定义签筒</button>
+    <button id="btnUseCustom" type="button">使用自定义签筒</button>
+    <button id="btnUseDefault" type="button">恢复默认签筒</button>
+  </div>
+
+  <p class="hint" id="customStatus">当前：默认签筒</p>
+          </section>
           <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
         </div>
 
@@ -163,7 +199,6 @@
           小提示：签写成行动句更好玩，比如“喝水”“伸懒腰”“看窗外两分钟”“把手机放下”。🙂
         </div>
       </div>
-
       <div class="card">
         <div class="row" style="justify-content:space-between">
           <div style="font-weight:850">自定义签筒</div>
@@ -271,6 +306,117 @@
       saveTip.textContent = "已恢复默认签。";
       render();
     }
+// ===== 自定义签筒（本地保存）=====
+const LS_CUSTOM_POOL = "sunmoon_custom_pool_v1";
+const LS_POOL_MODE = "sunmoon_pool_mode_v1"; // "default" | "custom"
+
+function parseLines(text){
+  return text
+    .split("\n")
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function loadCustomPool(){
+  try{
+    const raw = localStorage.getItem(LS_CUSTOM_POOL) || "";
+    return parseLines(raw);
+  }catch(e){
+    return [];
+  }
+}
+
+function saveCustomPool(lines){
+  localStorage.setItem(LS_CUSTOM_POOL, lines.join("\n"));
+}
+
+function setPoolMode(mode){
+  localStorage.setItem(LS_POOL_MODE, mode);
+  const status = document.getElementById("customStatus");
+  if(status) status.textContent = "当前：" + (mode === "custom" ? "自定义签筒" : "默认签筒");
+}
+
+// 你原本的签池变量，假设叫 defaultBag / pool / items 之类
+// 这里需要你把“当前使用的签池”切换掉。
+// 我先做成：currentPool 指向你抽签时用的数组。
+let currentPool = null;
+
+// 这段你要对齐你的原代码：把“抽签用的数组”改成 currentPool
+function initPoolBridge(){
+  // 1) 找到你原来默认签池数组（比如 defaultBag 或 defaultPool）
+  // 2) 让 currentPool = defaultPool
+  // 3) 抽签函数用 currentPool
+  //
+  // 因为我没看到你具体变量名，所以我在这里做“最少侵入式”处理：
+  // 如果你原来就有一个全局数组叫 defaultBag，就用它。
+  if(typeof defaultBag !== "undefined"){
+    currentPool = defaultBag.slice();
+  }else if(typeof defaultPool !== "undefined"){
+    currentPool = defaultPool.slice();
+  }else if(typeof pool !== "undefined"){
+    currentPool = pool.slice();
+  }
+}
+
+function applyPoolMode(){
+  const input = document.getElementById("customInput");
+  const mode = localStorage.getItem(LS_POOL_MODE) || "default";
+  const custom = loadCustomPool();
+
+  if(input){
+    input.value = custom.join("\n");
+  }
+
+  if(mode === "custom" && custom.length > 0){
+    currentPool = custom.slice();
+    setPoolMode("custom");
+  }else{
+    // 回默认
+    initPoolBridge();
+    setPoolMode("default");
+  }
+}
+
+// 绑定按钮
+function bindCustomUI(){
+  const input = document.getElementById("customInput");
+  const btnSave = document.getElementById("btnSaveCustom");
+  const btnUse = document.getElementById("btnUseCustom");
+  const btnDef = document.getElementById("btnUseDefault");
+
+  if(btnSave){
+    btnSave.addEventListener("click", () => {
+      const lines = parseLines(input ? input.value : "");
+      saveCustomPool(lines);
+      document.getElementById("customStatus").textContent =
+        "已保存：" + lines.length + " 条（当前不一定在使用）";
+    });
+  }
+
+  if(btnUse){
+    btnUse.addEventListener("click", () => {
+      const lines = loadCustomPool();
+      if(lines.length === 0){
+        document.getElementById("customStatus").textContent = "你的自定义签筒是空的😑";
+        return;
+      }
+      currentPool = lines.slice();
+      setPoolMode("custom");
+    });
+  }
+
+  if(btnDef){
+    btnDef.addEventListener("click", () => {
+      initPoolBridge();
+      setPoolMode("default");
+    });
+  }
+}
+
+// 页面启动
+initPoolBridge();
+bindCustomUI();
+applyPoolMode();
 
     function drawOne(){
       const bag = getBag();
@@ -302,7 +448,9 @@
     $("btnClearLast").addEventListener("click", clearLast);
     $("btnSave").addEventListener("click", saveBag);
     $("btnReset").addEventListener("click", resetBag);
-
+$("btnSaveCustom").addEventListener("click", saveCustomBag);
+$("btnUseCustom").addEventListener("click", () => { setPoolMode("custom"); render(); });
+$("btnUseDefault").addEventListener("click", () => { setPoolMode("default"); render(); });
     render();
   </script>
 </body>
