@@ -258,17 +258,22 @@
 function getBag(){
   const raw = localStorage.getItem(LS_BAG);
 
-  // 只有第一次完全没有存档时，才把默认签筒写进去
+  // 第一次：没有任何保存，就写入默认签筒
   if(!raw){
-    localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
-    return defaultBag.slice();
+    const d = defaultBag.slice();
+    localStorage.setItem(LS_BAG, JSON.stringify(d));
+    return d;
   }
 
-  let bag = safeParse(raw, null);
+  const bag = safeParse(raw, null);
+
+  // 保存坏了 / 为空：修复为默认签筒，并重新写回本地
   if(!Array.isArray(bag) || bag.length === 0){
-  localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
-  return defaultBag.slice();
+    const d = defaultBag.slice();
+    localStorage.setItem(LS_BAG, JSON.stringify(d));
+    return d;
   }
+
   return bag;
 }
    
