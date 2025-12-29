@@ -278,7 +278,7 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>小月历 · 周期记录器</h1>
-            <div class="sub">只做“记录 + 计算”爱你）</div>
+            <div class="sub">只做“记录 + 计算以及关心小乖"）</div>
           </div>
         </div>
         <div class="themePills" id="themePills" aria-label="主题">
@@ -286,7 +286,7 @@
           <div class="theme" data-theme="mint"><span class="sw"></span>薄荷奶</div>
           <div class="theme" data-theme="peach"><span class="sw"></span>蜜桃云</div>
           <div class="theme" data-theme="mono"><span class="sw"></span>雾灰</div>
-          <div class="theme" data-theme="mono"><span class="sw"></span>雾蓝</div>
+          <div class="theme" data-theme="mono"><span class="sw"></span>溪水蓝</div>
         </div>
       </div>
 
@@ -327,7 +327,7 @@
           <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
 
           <div class="hint">
-            你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活和爱我。^^
+            你只是被“焦虑+日期”联手欺负了！这个页面负责把差分和平均数做掉，剩下的你只管生活和爱我。^^
           </div>
         </div>
       </div>
@@ -364,7 +364,7 @@
           <div class="row">
             <div style="grid-column:1 / -1;">
               <label for="note">备注（可选，比如“作息乱/考试周/出差／压力大”）</label>
-              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行～" />
+              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行(ー`´ー)" />
             </div>
           </div>
           <div class="actions">
@@ -399,7 +399,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px;">
-          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。但它可以帮你把“日期算术”做得不翻车。
+          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。但它可以帮我的小乖把“日期算术”做得不翻车。
         </div>
       </div>
     </aside>
@@ -617,7 +617,7 @@
         $("predictText").textContent = `${iso(d)}（按均值${p.avg}天）`;
         const cd = countdownTo(d);
         if(cd > 0) $("countdownText").textContent = `还有 ${cd} 天`;
-        else if(cd === 0) $("countdownText").textContent = "就是今天";
+        else if(cd === 0) $("countdownText").textContent = "就是今天啦！";
         else $("countdownText").textContent = `已过 ${Math.abs(cd)} 天`;
       }
     }
@@ -855,12 +855,12 @@
       const today = todayKey();
       const idx = state.records.findIndex(r => !r.end);
       if(idx === -1){
-        toast("没有找到“进行中”的记录～先点“快速开始”再结束。(๑•̀ㅂ•́)و✧");
+        toast("没有找到“进行中”的记录～先点“快速开始”再结束！爱你！(๑•̀ㅂ•́)و✧");
         return;
       }
       const r = state.records[idx];
       if(today < r.start){
-        toast("今天比开始日期更早？我先不结束，检查一下日期吧～");
+        toast("今天比开始日期更早？小乖先不结束，检查一下日期吧～");
         return;
       }
       r.end = today;
@@ -875,7 +875,7 @@
     $("btnFillToday").addEventListener("click", ()=>{ $("start").value = todayKey(); toast("开始日期已填今天。","✓"); });
     $("btnQuickStart").addEventListener("click", quickStartToday);
     $("btnQuickEnd").addEventListener("click", quickEndToday);
-    $("btnHelp").addEventListener("click", ()=> toast("小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
+    $("btnHelp").addEventListener("click", ()=> toast("悄悄告诉小乖的小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
 
     $("btnExport").addEventListener("click", exportJSON);
     $("btnImport").addEventListener("click", ()=> $("file").click());
@@ -889,7 +889,7 @@
     });
 
     $("btnClear").addEventListener("click", ()=>{
-      if(confirm("真的要清空所有记录吗？这一步不可撤销。")){
+      if(confirm("真的要清空所有记录吗？这一步不可撤销ᵟຶᴖ ᵟຶ")){
         state.records = [];
         state._editing = null;
         saveState();
@@ -940,7 +940,7 @@
     function init(){
       applyTheme(state.theme || "lavender");
       rerenderAll();
-      toast("已准备好：先加一条“开始日期”就能算周期啦。","✦");
+      toast("已准备好：先加一条“开始日期”小乖就能算周期啦。","✦");
     }
     init();
   </script>
