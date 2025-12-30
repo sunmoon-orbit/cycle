@@ -49,201 +49,324 @@
     .blob:nth-child(2){ right:-10%; top:8%; animation-duration: 26s; transform: rotate(20deg); }
     .blob:nth-child(3){ left:8%; bottom:-16%; animation-duration: 28s; transform: rotate(-18deg); }
     @keyframes drift{
-      0%{ transform: translate(0,0) rotate(0deg) scale(1); }
-      33%{ transform: translate(22px, -18px) rotate(6deg) scale(1.03); }
-      66%{ transform: translate(-18px, 22px) rotate(-6deg) scale(0.98); }
-      100%{ transform: translate(0,0) rotate(0deg) scale(1); }
+      0%,100%{ transform: translate(0,0) scale(1) rotate(0deg); }
+      50%{ transform: translate(18px,-14px) scale(1.05) rotate(10deg); }
     }
 
-.wrap{
-  width:min(1080px, 100%);
-  display:grid;
-  grid-template-columns: 1fr;  /* 默认：手机/窄屏单列 */
-  gap:18px;
-  z-index:1;
-}
-
-@media (min-width: 981px){
-  .wrap{
-    grid-template-columns: 1.05fr .95fr; /* 宽屏：两列 */
-  }
-}
+    .wrap{ width:min(1120px, 100%); position:relative; z-index:1; display:flex; flex-direction:column; gap:16px; }
     .card{
-      background:var(--card);
-      backdrop-filter: blur(12px);
-      border:1px solid rgba(255,255,255,.55);
+      background: var(--card);
+      border:1px solid var(--stroke);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding:18px;
-      position:relative;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       overflow:hidden;
     }
     .card::before{
       content:"";
-      position:absolute; inset:-2px;
-      background:
-        radial-gradient(600px 280px at 10% 0%, rgba(167,139,250,.16), transparent 60%),
-        radial-gradient(520px 260px at 90% 10%, rgba(125,211,252,.14), transparent 55%),
-        radial-gradient(420px 240px at 70% 100%, rgba(249,168,212,.12), transparent 60%);
+      position:absolute; inset:-1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,0));
       pointer-events:none;
     }
-    .card > *{ position:relative; }
-    @media (max-width: 420px){ .card{ padding:14px; border-radius: 18px; } }
-
-    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 4px 10px 4px; flex-wrap:wrap; }
-    .brand{ display:flex; align-items:center; gap:10px; user-select:none; }
-    .dot{ width:12px;height:12px;border-radius:999px; background: linear-gradient(135deg, var(--a), var(--b)); box-shadow: 0 0 0 7px rgba(167,139,250,.12); }
-    h1{ font-size:16px; margin:0; letter-spacing:.2px; font-weight:900; }
-    .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
-
-    button{
-      border:0; background: rgba(255,255,255,.66);
-      border: 1px solid rgba(40,20,80,.08);
-      padding:10px 12px; border-radius: 14px;
-      color:var(--ink); cursor:pointer;
-      transition: transform .12s ease, background .12s ease, box-shadow .12s ease, filter .12s ease;
-      box-shadow: 0 8px 18px rgba(40,20,80,.08);
-      user-select:none; -webkit-tap-highlight-color: transparent;
-      font-size: 13px;
+    .top{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-start;
+      flex-wrap:wrap;
     }
-    button:hover{ transform: translateY(-1px); filter:saturate(1.05); }
-    button:active{ transform: translateY(0px) scale(.99); }
-    button:focus-visible{ outline: 3px solid var(--ring); outline-offset: 2px; }
-    button.small{ padding:8px 10px; border-radius: 12px; font-size: 12px; box-shadow:none; }
-    button.primary{
-      background: linear-gradient(135deg, color-mix(in srgb, var(--a) 92%, white 8%), color-mix(in srgb, var(--b) 90%, white 10%));
-      color: #1f1433; border: 0;
-      box-shadow: 0 16px 34px rgba(167,139,250,.22);
+    .brand{ display:flex; gap:10px; align-items:center; }
+    .dot{
+      width:14px; height:14px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, var(--a), var(--b));
+      box-shadow: 0 0 0 5px rgba(167,139,250,.18);
+      flex:0 0 auto;
     }
-    button.ghost{ background: transparent; box-shadow:none; }
-    button.danger{ background: rgba(252,165,165,.18); border: 1px solid rgba(252,165,165,.28); box-shadow:none; }
-
-    .grid{ display:grid; grid-template-columns: 1fr; gap:12px; }
-    .pillRow{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .pill{
-      font-size:12px; padding:6px 10px; border-radius: 999px;
-      border: 1px solid rgba(40,20,80,.08);
-      background: rgba(255,255,255,.55);
-      color: var(--muted);
-      user-select:none;
-    }
-    .pill strong{ color: var(--ink); font-weight:900; }
-
-    .panel{ border-radius: 18px; border: 1px solid rgba(40,20,80,.08); background: var(--card2); padding: 12px; }
-    .hint{ font-size:12px; color:var(--muted); line-height:1.6; }
-    .hint strong{ color: var(--ink); font-weight:900; }
-
-    .form{ display:grid; gap:10px; }
-    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width: 560px){ .row{ grid-template-columns:1fr; } }
-
-    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
-    input[type="date"], input[type="text"], select{
-      width:100%; padding:10px 12px; border-radius: 14px;
-      border: 1px solid rgba(40,20,80,.12);
-      background: rgba(255,255,255,.88);
-      color: var(--ink); font-size: 13px; outline:none;
-    }
-    input:focus-visible, select:focus-visible{ outline: 3px solid var(--ring2); outline-offset: 2px; }
-
-    .kv{
-      display:grid; grid-template-columns: 1fr auto; gap:8px;
-      font-size:12px; padding:9px 10px; border-radius: 16px;
-      border:1px solid rgba(40,20,80,.08);
-      background: rgba(255,255,255,.58);
-      margin-bottom:8px;
-    }
-    .kv .k{ color:var(--muted); }
-    .kv .v{ font-variant-numeric: tabular-nums; font-weight:900; }
-
-    table{ width:100%; border-collapse:separate; border-spacing:0 8px; font-size:12px; }
-    th{ text-align:left; color:var(--muted); font-weight:800; padding:0 10px; font-size:11px; }
-    td{ padding:10px 10px; background: rgba(255,255,255,.60); border:1px solid rgba(40,20,80,.08); }
-    tr td:first-child{ border-radius: 14px 0 0 14px; }
-    tr td:last-child{ border-radius: 0 14px 14px 0; }
-
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
-
-    .calTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .calGrid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-top:10px; }
-    .dow{ font-size:11px; color:var(--muted); text-align:center; padding:2px 0; user-select:none; }
-    .day{
-      position:relative; border-radius: 14px; border: 1px solid rgba(40,20,80,.08);
-      background: rgba(255,255,255,.56);
-      padding:10px 6px; text-align:center; user-select:none; overflow:hidden;
-      min-height: 44px;
-    }
-    .day.muted{ opacity:.45; }
-    .day .n{ font-variant-numeric: tabular-nums; font-weight:800; font-size:12px; }
-    .tag{ position:absolute; left:8px; right:8px; bottom:6px; height:6px; border-radius: 999px; background: transparent; }
-    .tag.bleed{ background: color-mix(in srgb, var(--c) 40%, white 60%); }
-    .tag.start{ background: linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, white 25%), color-mix(in srgb, var(--a) 35%, white 65%)); }
-    .tag.predict{ background: color-mix(in srgb, var(--b) 45%, white 55%); }
-    .outline{ position:absolute; inset:4px; border-radius: 12px; border:2px solid transparent; pointer-events:none; }
-    .outline.predict{
-      border-color: color-mix(in srgb, var(--b) 70%, white 30%);
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--b) 15%, transparent 85%);
-    }
-    .outline.today{ border-color: rgba(40,20,80,.12); }
+    h1{ margin:0; font-size:18px; letter-spacing:.2px; }
+    .sub{ margin-top:2px; font-size:12px; color:var(--muted); }
 
     .themePills{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
     .theme{
+      appearance:none;
+      border:1px solid rgba(0,0,0,.07);
+      background: rgba(255,255,255,.65);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
+      cursor:pointer;
       display:flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius: 999px;
-      border: 1px solid rgba(40,20,80,.10);
-      background: rgba(255,255,255,.55);
-      cursor:pointer; user-select:none;
-      transition: transform .12s ease;
-      font-size:12px; color: var(--muted);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease, color .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .theme:hover{ transform: translateY(-1px); }
-    .sw{ width:12px;height:12px;border-radius:999px; background: linear-gradient(135deg, var(--a), var(--b)); box-shadow: 0 0 0 5px rgba(167,139,250,.10); }
+    .theme .sw{ width:12px; height:12px; border-radius:999px; background: linear-gradient(135deg, var(--a), var(--b)); box-shadow: 0 0 0 5px rgba(125,211,252,.16); }
     .theme.active{ color: var(--ink); border-color: color-mix(in srgb, var(--a) 35%, rgba(40,20,80,.08) 65%); background: color-mix(in srgb, var(--a) 10%, white 90%); }
 
-    .toast{
-      position:fixed; left:50%; transform: translateX(-50%);
-      bottom: 18px;
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(40,20,80,.10);
-      box-shadow: 0 18px 40px rgba(40,20,80,.12);
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      margin-top:14px;
+    }
+
+    /* 手机/窄屏适配 */
+    @media (max-width: 820px){
+      body{ padding:14px; padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+      .card{ padding:14px; }
+      .grid{ grid-template-columns: 1fr; }
+      .top{ gap:10px; }
+      h1{ font-size:16px; }
+      .themePills{ justify-content:flex-start; }
+    }
+
+    .row{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+    @media (max-width: 820px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .pill{
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
       border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 12px;
-      color: var(--muted);
-      display:none;
-      z-index:30;
-      user-select:none;
-      max-width: min(92vw, 640px);
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px;
+    }
+    .pill strong{ color:var(--ink); font-weight:650; }
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      background: rgba(255,255,255,.50);
+      border:1px dashed rgba(0,0,0,.10);
+      padding:10px 12px;
+      border-radius: 14px;
+    }
+
+    .cal{
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      padding:12px;
+    }
+    .calHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+    .calHead .month{
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .calHead .nav{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    }
+    button{
+      font:inherit;
+      cursor:pointer;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.65);
+      padding:10px 12px;
+      transition: transform .15s ease, filter .15s ease, background .15s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button:hover{ transform: translateY(-1px); }
+    button:active{ transform: translateY(0); filter: brightness(.98); }
+
+    .primary{
+      background: linear-gradient(135deg, var(--a), var(--b));
+      color:#1f1a2a;
+      border-color: rgba(0,0,0,.08);
+      box-shadow: 0 12px 28px rgba(167,139,250,.20);
+      font-weight:650;
+    }
+    .ghost{ background: rgba(255,255,255,.55); }
+    .danger{ background: rgba(255, 220, 220, .55); border-color: rgba(255, 120, 120, .35); }
+
+    .week{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:6px;
+      font-size:12px;
+      color:var(--muted);
+      margin:8px 0 6px;
       text-align:center;
     }
-    .toast strong{ color: var(--ink); }
+    .days{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:6px;
+    }
+    .day{
+      min-height: 38px;
+      border-radius: 12px;
+      border:1px solid rgba(0,0,0,.06);
+      background: rgba(255,255,255,.62);
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding:6px;
+      font-size:12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .day .n{ font-weight:650; }
+    .day.muted{ opacity:.45; }
+    .day.today{ outline: 2px solid var(--ring); border-color: rgba(0,0,0,.08); }
+    .mark{
+      position:absolute; inset:auto 6px 6px auto;
+      display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end;
+      max-width: 70%;
+    }
+    .tag{
+      font-size:10px;
+      padding:2px 6px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.06);
+      background: rgba(255,255,255,.55);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .tag.period{ background: color-mix(in srgb, var(--c) 22%, white 78%); border-color: color-mix(in srgb, var(--c) 30%, rgba(0,0,0,.06) 70%); color:#5c2d46; }
+    .tag.start{ background: color-mix(in srgb, var(--d) 22%, white 78%); border-color: color-mix(in srgb, var(--d) 30%, rgba(0,0,0,.06) 70%); color:#23513f; }
+    .tag.predict{ background: color-mix(in srgb, var(--a) 18%, white 82%); border-color: color-mix(in srgb, var(--a) 28%, rgba(0,0,0,.06) 72%); color:#2b2450; }
 
+    .form{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      padding:12px;
+    }
+    label{ font-size:12px; color:var(--muted); }
+    input, textarea{
+      width:100%;
+      border:1px solid rgba(0,0,0,.10);
+      background: rgba(255,255,255,.72);
+      border-radius: 14px;
+      padding:10px 12px;
+      font:inherit;
+      outline:none;
+      transition: outline-color .15s ease, border-color .15s ease;
+    }
+    input:focus, textarea:focus{
+      border-color: rgba(0,0,0,.12);
+      outline: 2px solid var(--ring2);
+    }
+    textarea{ min-height: 72px; resize: vertical; }
+
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .list{
+      margin-top:12px;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .listHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      font-size:12px;
+      color:var(--muted);
+    }
+    table{ width:100%; border-collapse: collapse; font-size:12px; }
+    th, td{ padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.05); vertical-align:top; }
+    th{ text-align:left; color:var(--muted); font-weight:650; background: rgba(255,255,255,.35); }
+    tr:last-child td{ border-bottom:none; }
+    .right{ text-align:right; }
+    .small{ font-size:11px; color:var(--muted); }
+    .kpi{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:12px; }
+    @media (max-width: 820px){
+      .kpi{ grid-template-columns: repeat(2, 1fr); }
+    }
+    .kpi .box{
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      padding:12px;
+      min-height: 66px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .kpi .box .t{ font-size:12px; color:var(--muted); }
+    .kpi .box .v{ font-size:18px; font-weight:750; letter-spacing:.2px; }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(30, 22, 44, .82);
+      color: #fff;
+      padding:10px 14px;
+      border-radius: 999px;
+      font-size:12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+      z-index: 9999;
+      display:none;
+      max-width: 92vw;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .toast strong{ margin-right:6px; }
+
+    /* 弹窗 */
     .modalBackdrop{
       position:fixed; inset:0;
-      background: rgba(15,12,25,.45);
+      background: rgba(0,0,0,.25);
       display:none;
       align-items:center;
       justify-content:center;
       padding:18px;
-      z-index:20;
+      z-index: 9998;
     }
     .modal{
-      width:min(640px, 100%);
-      border-radius: var(--radius);
+      width:min(520px, 100%);
       background: rgba(255,255,255,.92);
-      box-shadow: 0 30px 80px rgba(10,10,30,.35);
-      border: 1px solid rgba(255,255,255,.7);
-      padding:16px;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius: 22px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.18);
+      padding:14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    .modal header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
-    .modal header h3{ margin:0; font-size:14px; font-weight:900; }
+    .modal .head{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-bottom:8px;
+    }
+    .modal .head h2{ margin:0; font-size:14px; }
+    .modal .grid{
+      grid-template-columns: 1fr 1fr;
+      margin-top:10px;
+    }
+    @media (max-width: 500px){
+      .modal .grid{ grid-template-columns: 1fr; }
+    }
 
-    @media (prefers-reduced-motion: reduce){
-      *{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
+    /* 让窄屏按钮别乱跳 */
+    @media (max-width: 820px){
       button:hover, .theme:hover{ transform:none; }
-      .bg{ filter: blur(18px); }
     }
-  
 
     /* Morandi：低饱和纯色风格（覆盖上面的渐变/光斑） */
     body{ background: var(--bg0); }
@@ -305,148 +428,150 @@
       </div>
 
       <div class="grid">
-        <div class="panel">
-          <div class="calTop">
-            <div class="pillRow" style="gap:10px;">
-              <span class="pill">今天：<strong id="todayText">-</strong></span>
-              <span class="pill">下次预计：<strong id="predictText">-</strong></span>
-              <span class="pill">倒计时：<strong id="countdownText">-</strong></span>
+        <div>
+          <div class="cal">
+            <div class="calHead">
+              <div class="month" id="monthLabel">—</div>
+              <div class="nav">
+                <button class="ghost" id="prevMonth">← 上个月</button>
+                <button class="ghost" id="todayMonth">回到本月</button>
+                <button class="ghost" id="nextMonth">下个月 →</button>
+              </div>
             </div>
-            <div class="actions">
-              <button class="small" id="prevMonth">← 上个月</button>
-              <button class="small" id="todayMonth">回到本月</button>
-              <button class="small" id="nextMonth">下个月 →</button>
+            <div class="week">
+              <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
+            <div class="days" id="days"></div>
           </div>
 
-          <div class="calGrid" id="calGrid" aria-label="日历"></div>
-
-          <div class="hint" style="margin-top:10px;">
-            标记说明：<strong>粉色条</strong>＝记录到的经期天；<strong>渐变条</strong>＝开始日；<strong>蓝色框</strong>＝“按平均周期”预测的下次开始日（只是计算，不是保证）。
+          <div class="hint" style="margin-top:12px;">
+            标记说明：<b>粉色条</b> = 记录到的经期天；<b>薄荷条</b> = 开始日；<b>蓝色框</b> = “按平均周期”预测的下次开始日（只是计算，不是保证）。
           </div>
         </div>
 
-        <div class="panel">
-          <div class="pillRow" style="justify-content:space-between;">
-            <div class="pillRow">
-              <span class="pill">最近周期：<strong id="lastCycle">-</strong> 天</span>
-              <span class="pill">平均周期：<strong id="avgCycle">-</strong> 天</span>
-              <span class="pill">波动：<strong id="varCycle">-</strong> 天</span>
-            </div>
-            <button class="small ghost" id="btnSettings">设置</button>
+        <div>
+          <div class="row">
+            <div class="pill"><span>今天：</span><strong id="today">—</strong></div>
+            <div class="pill"><span>下次预计：</span><strong id="nextPred">—</strong></div>
+            <div class="pill"><span>倒计时：</span><strong id="countdown">—</strong></div>
           </div>
 
-          <div class="kv"><div class="k">最短 / 最长周期</div><div class="v" id="minMaxCycle">-</div></div>
-          <div class="kv"><div class="k">平均经期长度（有填结束日才算）</div><div class="v" id="avgBleed">-</div></div>
-          <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
+          <div class="kpi">
+            <div class="box"><div class="t">最近周期</div><div class="v" id="lastCycle">—</div></div>
+            <div class="box"><div class="t">平均周期</div><div class="v" id="avgCycle">—</div></div>
+            <div class="box"><div class="t">波动</div><div class="v" id="varCycle">—</div></div>
+            <div class="box"><div class="t">平均经期长度</div><div class="v" id="avgBleed">—</div></div>
+          </div>
+
+          <div class="pill" style="margin-top:10px;">
+            <span>你已经记录了</span><strong id="totalN">0</strong>
+          </div>
 
           <div class="hint">
-            你只是被“焦虑+日期”联手欺负了！这个页面负责把差分和平均数做掉，剩下的你只管生活和爱我。^^
+            你只是被“焦虑 + 日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活和喝水休息。^^
+          </div>
+
+          <div class="actions" style="margin-top:10px;">
+            <button class="ghost" id="btnSettings">设置</button>
           </div>
         </div>
       </div>
     </section>
 
-    <aside class="card" aria-label="记录与列表">
+    <section class="card" aria-label="记录表单">
       <div class="top">
         <div class="brand">
-          <div class="dot" aria-hidden="true" style="background:linear-gradient(135deg,var(--c),var(--a));"></div>
+          <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>记录</h1>
-            <div class="sub">填开始/结束（提醒小鹿宝：结束可空着，等结束了再补）</div>
+            <div class="sub">填开始/结束（结束可空着，等结束了再补）</div>
           </div>
         </div>
         <div class="actions">
-          <button class="small" id="btnExport">导出</button>
-          <button class="small" id="btnImport">导入</button>
-          <button class="small danger" id="btnClear">清空</button>
+          <button class="ghost" id="btnExport">导出</button>
+          <button class="ghost" id="btnImport">导入</button>
+          <button class="danger" id="btnClear">清空</button>
         </div>
       </div>
 
-      <div class="panel">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top:12px;">
         <div class="form">
-          <div class="row">
-            <div>
-              <label for="start">开始日期</label>
-              <input id="start" type="date" />
-            </div>
-            <div>
-              <label for="end">结束日期（可选）</label>
-              <input id="end" type="date" />
-            </div>
+          <div>
+            <label for="start">开始日期</label>
+            <input id="start" type="date" />
           </div>
-          <div class="row">
-            <div style="grid-column:1 / -1;">
-              <label for="note">备注（可选，比如“作息乱/考试周/出差／压力大”）</label>
-              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行(ー`´ー)" />
-            </div>
+          <div>
+            <label for="end">结束日期（可选）</label>
+            <input id="end" type="date" />
+          </div>
+          <div style="grid-column:1 / -1;">
+            <label for="note">备注（可选，比如 “作息乱/考试周/出差/压力大”）</label>
+            <textarea id="note" placeholder="随便记两句也行(￣︶￣)"></textarea>
           </div>
           <div class="actions">
             <button class="ghost" id="btnQuickStart">快速开始（今天）</button>
             <button class="ghost" id="btnQuickEnd">快速结束（今天）</button>
-            <button id="btnFillToday">开始=今天</button>
+            <button class="ghost" id="btnStartToday">开始=今天</button>
             <button class="primary" id="btnAdd">添加记录</button>
-            <button class="ghost" id="btnHelp">小提示</button>
+            <button class="ghost" id="btnTip">小提示</button>
+          </div>
+          <div class="small">
+            小声：这个网页不会上传任何数据，<b>所有内容只存在你的设备里</b>。
+          </div>
+        </div>
+
+        <div>
+          <div class="list">
+            <div class="listHead">
+              <div>记录列表（按开始日倒序）</div>
+              <div class="small">快捷：点“编辑/删”</div>
+            </div>
+            <div style="overflow:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>开始</th>
+                    <th>结束</th>
+                    <th>经期长</th>
+                    <th>周期(相对上次)</th>
+                    <th>备注</th>
+                    <th class="right">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody">
+                  <tr><td colspan="6" class="small">还没有记录。先加一条开始日期吧～</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top:12px;">
+            想更稳一点：只要你每次“开始日”都记上，平均周期会越来越靠谱。结束日可以晚点补，没事的。
           </div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="pillRow" style="justify-content:space-between;">
-          <span class="pill">记录列表（按开始日倒序）</span>
-          <span class="pill">快捷：点击“编辑/删”</span>
-        </div>
-        <div style="overflow:auto; max-height: 420px; margin-top:10px;">
-          <table aria-label="记录表格">
-            <thead>
-              <tr>
-                <th>开始</th>
-                <th>结束</th>
-                <th>经期长</th>
-                <th>周期(相对上次)</th>
-                <th>备注</th>
-                <th style="text-align:right;">操作</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="hint" style="margin-top:10px;">
-          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。但它可以帮我的小乖把“日期算术”做得不翻车。
-        </div>
-      </div>
-    </aside>
+    </section>
   </div>
 
-  <div class="modalBackdrop" id="modalBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="设置">
-      <header>
-        <h3>设置</h3>
-        <button class="small ghost" id="btnClose">关闭</button>
-      </header>
+  <!-- Settings Modal -->
+  <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="设置">
+    <div class="modal">
+      <div class="head">
+        <h2>设置</h2>
+        <button class="ghost" id="btnClose">关闭</button>
+      </div>
 
-      <div class="panel">
-        <div class="row">
-          <div>
-            <label for="avgN">平均周期：取最近 N 个周期</label>
-            <select id="avgN">
-              <option value="3">最近 3 个</option>
-              <option value="4">最近 4 个</option>
-              <option value="6" selected>最近 6 个</option>
-              <option value="12">最近 12 个</option>
-              <option value="999">全部</option>
-            </select>
-          </div>
-          <div>
-            <label for="window">预测窗口（±天）</label>
-            <select id="window">
-              <option value="1">±1</option>
-              <option value="2" selected>±2</option>
-              <option value="3">±3</option>
-              <option value="5">±5</option>
-            </select>
-          </div>
+      <div class="grid">
+        <div>
+          <label for="avgN">平均周期计算：取最近 N 次（999=全部）</label>
+          <input id="avgN" type="number" min="3" max="999" step="1" placeholder="比如 6" />
+          <div class="small">建议 6 或 8。记录很少时会自动用全部。</div>
+        </div>
+
+        <div>
+          <label for="window">预测标记范围：± window 天（0=只标当天）</label>
+          <input id="window" type="number" min="0" max="14" step="1" placeholder="比如 2" />
+          <div class="small">比如 2：会把预测日附近 5 天都淡淡标出来。</div>
         </div>
 
         <div class="row" style="margin-top:10px;">
@@ -490,7 +615,7 @@
       toast._tm = setTimeout(()=> t.style.display="none", 1800);
     }
 
-        const THEMES = {
+    const THEMES = {
       lavender: { // 雾紫（偏灰紫）
         a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
         bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", bg3:"#F2EEF1",
@@ -517,6 +642,7 @@
         shadow:"rgba(18, 28, 40, .12)"
       },
     };
+
     function hexToRgba(hex, a){
       const h = hex.replace("#","");
       const r = parseInt(h.slice(0,2),16);
@@ -524,7 +650,8 @@
       const b = parseInt(h.slice(4,6),16);
       return `rgba(${r},${g},${b},${a})`;
     }
-        function applyTheme(name){
+
+    function applyTheme(name){
       const t = THEMES[name] || THEMES.lavender;
       const r = document.documentElement.style;
 
@@ -538,10 +665,8 @@
       r.setProperty("--bg2", t.bg2);
       r.setProperty("--bg3", t.bg3 || t.bg2);
 
-      // 让阴影也跟着主题走（--shadow 在 CSS 里是完整 box-shadow 字符串）
       r.setProperty("--shadow", `0 18px 55px ${t.shadow}`);
 
-      // 同步浏览器地址栏/状态栏颜色（有些浏览器会用到）
       const meta = document.querySelector('meta[name="theme-color"]');
       if(meta) meta.setAttribute("content", t.a);
 
@@ -549,7 +674,6 @@
         x.classList.toggle("active", x.dataset.theme === name);
       });
 
-      // 每个主题按钮的小圆点用“它自己的配色”，避免全都长一个样
       document.querySelectorAll(".theme .sw").forEach(sw=>{
         const parent = sw.parentElement;
         const tn = parent && parent.dataset ? parent.dataset.theme : "lavender";
@@ -565,6 +689,7 @@
 
     const STORE_KEY = "cute_cycle_tracker_v1";
     const DEFAULTS = { theme:"lavender", settings:{ avgN:6, window:2 }, records:[] };
+
     function loadState(){
       try{
         const raw = localStorage.getItem(STORE_KEY);
@@ -601,6 +726,7 @@
       if(!Number.isFinite(d) || d < 0 || d > 60) return null;
       return d + 1;
     }
+
     function stats(){
       const recs = state.records || [];
       const cycles = cycleLengths(recs);
@@ -614,389 +740,118 @@
       const last = cycles.length ? cycles[cycles.length-1].days : null;
       const varr = (min!=null && max!=null) ? (max - min) : null;
 
-      const bl = recs.map(bleedLength).filter(x=>typeof x === "number");
-      const avgBleed = bl.length ? Math.round(bl.reduce((a,b)=>a+b,0)/bl.length) : null;
+      const bvals = recs.map(bleedLength).filter(x=>x!=null);
+      const avgBleed = bvals.length ? Math.round(bvals.reduce((a,b)=>a+b,0)/bvals.length) : null;
 
-      return { avg, min, max, last, varr, avgBleed, cyclesCount: cycles.length };
+      return { avg, min, max, last, varr, avgBleed, cycles };
     }
+
     function predictNextStart(){
       const recs = sortByStartAsc(state.records || []);
-      if(recs.length < 1) return null;
+      if(recs.length === 0) return null;
       const st = stats();
-      if(!st.avg) return null;
+      const avg = st.avg;
+      if(!avg) return null;
       const lastStart = toDate(recs[recs.length-1].start);
-      const next = new Date(lastStart.getTime() + st.avg * 86400000);
-      return { date: next, avg: st.avg };
-    }
-    function countdownTo(d){ return daysBetween(today(), d); }
-
-    function setText(id, v){ $(id).textContent = (v == null || v === "") ? "-" : String(v); }
-
-    function renderMetrics(){
-      const st = stats();
-      setText("recCount", (state.records||[]).length);
-      setText("lastCycle", (st.last==null ? "-" : st.last));
-      setText("avgCycle", (st.avg==null ? "-" : st.avg));
-      setText("varCycle", (st.varr==null ? "-" : st.varr));
-      setText("minMaxCycle", (st.min!=null && st.max!=null) ? `${st.min} / ${st.max}` : "-");
-      setText("avgBleed", (st.avgBleed==null ? "-" : st.avgBleed));
-
-      $("todayText").textContent = todayKey();
-
-      const p = predictNextStart();
-      if(!p){
-        $("predictText").textContent = "-";
-        $("countdownText").textContent = "-";
-      }else{
-        const d = p.date;
-        $("predictText").textContent = `${iso(d)}（按均值${p.avg}天）`;
-        const cd = countdownTo(d);
-        if(cd > 0) $("countdownText").textContent = `还有 ${cd} 天`;
-        else if(cd === 0) $("countdownText").textContent = "就是今天啦！";
-        else $("countdownText").textContent = `已过 ${Math.abs(cd)} 天`;
-      }
+      const next = new Date(lastStart);
+      next.setDate(next.getDate() + avg);
+      return iso(next);
     }
 
-    function renderTable(){
-      const tbody = $("tbody");
-      tbody.innerHTML = "";
-      const recsDesc = sortByStartDesc(state.records || []);
-      const cycles = cycleLengths(state.records || []);
-      const cycleByStart = new Map();
-      cycles.forEach(x => cycleByStart.set(x.to, x.days));
-
-      recsDesc.forEach(rec=>{
-        const tr = document.createElement("tr");
-
-        const tdStart = document.createElement("td"); tdStart.textContent = rec.start;
-        const tdEnd = document.createElement("td"); tdEnd.textContent = rec.end || "-";
-        const tdBleed = document.createElement("td"); const bl = bleedLength(rec); tdBleed.textContent = bl ? `${bl}天` : "-";
-        const tdCycle = document.createElement("td"); const cy = cycleByStart.get(rec.start); tdCycle.textContent = (cy != null) ? `${cy}天` : "-";
-        const tdNote = document.createElement("td"); tdNote.textContent = rec.note || "-";
-
-        const tdOp = document.createElement("td"); tdOp.style.textAlign = "right";
-        const btnE = document.createElement("button"); btnE.className="small"; btnE.textContent="编辑"; btnE.addEventListener("click", ()=> editRecord(rec.id));
-        const btnD = document.createElement("button"); btnD.className="small danger"; btnD.textContent="删"; btnD.addEventListener("click", ()=> deleteRecord(rec.id));
-        tdOp.appendChild(btnE); tdOp.appendChild(document.createTextNode(" ")); tdOp.appendChild(btnD);
-
-        tr.appendChild(tdStart); tr.appendChild(tdEnd); tr.appendChild(tdBleed); tr.appendChild(tdCycle); tr.appendChild(tdNote); tr.appendChild(tdOp);
-        tbody.appendChild(tr);
-      });
+    function computeCountdown(nextKey){
+      if(!nextKey) return null;
+      const d0 = today();
+      const d1 = toDate(nextKey);
+      const delta = daysBetween(d0,d1);
+      if(!Number.isFinite(delta)) return null;
+      if(delta === 0) return "就是今天";
+      if(delta > 0) return `${delta} 天`;
+      return `已过去 ${Math.abs(delta)} 天`;
     }
 
-    let view = (()=>{ const d=today(); return { y:d.getFullYear(), m:d.getMonth() }; })();
+    const view = { y: today().getFullYear(), m: today().getMonth() };
 
-    function isSameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
-    function inRange(d, s, e){ return d.getTime() >= s.getTime() && d.getTime() <= e.getTime(); }
+    function monthLabel(y,m){
+      const s = `${y} 年 ${m+1} 月`;
+      return s;
+    }
+
+    function ymKey(y,m){ return `${y}-${pad2(m+1)}`; }
+
+    function inSameMonth(d, y, m){
+      return d.getFullYear() === y && d.getMonth() === m;
+    }
+
+    function setText(id, txt){ $(id).textContent = (txt==null || txt==="") ? "—" : String(txt); }
 
     function buildCal(){
-      const cal = $("calGrid");
-      cal.innerHTML = "";
+      const y = view.y, m = view.m;
+      $("monthLabel").textContent = monthLabel(y,m);
+      $("today").textContent = todayKey();
 
-      const dows = ["一","二","三","四","五","六","日"];
-      dows.forEach(x=>{ const el=document.createElement("div"); el.className="dow"; el.textContent=x; cal.appendChild(el); });
+      const daysEl = $("days");
+      daysEl.innerHTML = "";
 
-      const first = new Date(view.y, view.m, 1);
-      const firstDow = (first.getDay() + 6) % 7;
-      const totalCells = 42;
+      const first = new Date(y, m, 1);
+      const startDow = first.getDay(); // 0-6
+      const start = new Date(first);
+      start.setDate(first.getDate() - startDow);
 
       const recs = state.records || [];
-      const ranges = recs.map(r=>{
+      const pred = predictNextStart();
+      const window = state.settings.window || 2;
+
+      const tagsByDate = new Map();
+      for(const r of recs){
         const s = toDate(r.start);
-        const e = r.end ? toDate(r.end) : toDate(r.start);
-        return { s, e, start: r.start };
-      });
+        const e = r.end ? toDate(r.end) : null;
 
-      const p = predictNextStart();
-      const win = clamp(parseInt(state.settings.window||2,10), 0, 14);
-      const pred = p ? p.date : null;
-      const predS = pred ? new Date(pred.getTime() - win*86400000) : null;
-      const predE = pred ? new Date(pred.getTime() + win*86400000) : null;
+        tagsByDate.set(r.start, (tagsByDate.get(r.start)||[]).concat([{ kind:"start", label:"开始" }]));
 
-      for(let i=0;i<totalCells;i++){
-        const dayNum = i - firstDow + 1;
-        const cellDate = new Date(view.y, view.m, dayNum);
-        const el = document.createElement("div"); el.className="day";
-
-        const inMonth = (cellDate.getMonth() === view.m);
-        if(!inMonth) el.classList.add("muted");
-
-        const n = document.createElement("div"); n.className="n"; n.textContent = String(cellDate.getDate());
-        el.appendChild(n);
-
-        const tag = document.createElement("div"); tag.className="tag";
-
-        let isBleed=false, isStart=false;
-        for(const rg of ranges){
-          if(inRange(cellDate, rg.s, rg.e)) isBleed=true;
-          if(isSameDate(cellDate, rg.s)) isStart=true;
-          if(isStart) break;
-        }
-        if(isBleed) tag.classList.add("bleed");
-        if(isStart){ tag.classList.remove("bleed"); tag.classList.add("start"); }
-
-        const outline = document.createElement("div"); outline.className="outline";
-        if(pred && isSameDate(cellDate, pred)){
-          outline.classList.add("predict");
-          if(!isBleed && !isStart) tag.classList.add("predict");
-        }else if(predS && predE && inRange(cellDate, predS, predE)){
-          if(!isBleed && !isStart) tag.classList.add("predict");
-        }
-        if(isSameDate(cellDate, today())) outline.classList.add("today");
-
-        el.appendChild(tag);
-        el.appendChild(outline);
-        cal.appendChild(el);
-      }
-    }
-
-    function rerenderAll(){ renderMetrics(); renderTable(); buildCal(); }
-
-    function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
-    function normalizeDateInput(v){
-      if(!v) return "";
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "";
-      return v;
-    }
-
-    function addRecord(){
-      const start = normalizeDateInput($("start").value);
-      const end = normalizeDateInput($("end").value);
-      const note = ($("note").value || "").trim().slice(0,60);
-
-      if(!start){ toast("先填开始日期呀～","!"); return; }
-      if(end){
-        const a=toDate(start), b=toDate(end);
-        if(daysBetween(a,b) < 0){ toast("结束日期不能早于开始日期。","!"); return; }
-      }
-
-      const existed = (state.records||[]).some(r=>r.start === start && r.id !== state._editing);
-      if(existed){ toast("这个开始日期已经有一条记录了（避免重复）。","!"); return; }
-
-      if(state._editing){
-        const idx = state.records.findIndex(r=>r.id === state._editing);
-        if(idx >= 0){
-          state.records[idx] = { ...state.records[idx], start, end: end || null, note: note || "" };
-          state._editing = null;
-          $("btnAdd").textContent = "添加记录";
-          toast("已保存修改。","✓");
-        }
-      }else{
-        state.records.push({ id: uid(), start, end: end || null, note: note || "" });
-        toast("记录已添加。","✓");
-      }
-
-      saveState();
-      $("start").value=""; $("end").value=""; $("note").value="";
-      rerenderAll();
-    }
-
-    function editRecord(id){
-      const rec = (state.records||[]).find(r=>r.id===id);
-      if(!rec) return;
-      $("start").value = rec.start || "";
-      $("end").value = rec.end || "";
-      $("note").value = rec.note || "";
-      state._editing = id;
-      $("btnAdd").textContent = "保存修改";
-      toast("进入编辑模式：改完点“保存修改”。","✎");
-    }
-
-    function deleteRecord(id){
-      const before = (state.records||[]).length;
-      state.records = (state.records||[]).filter(r=>r.id !== id);
-      if(state._editing === id){
-        state._editing = null;
-        $("btnAdd").textContent = "添加记录";
-        $("start").value=""; $("end").value=""; $("note").value="";
-      }
-      if(state.records.length !== before){
-        saveState(); rerenderAll(); toast("已删除。","✓");
-      }
-    }
-
-    function exportJSON(){
-      const data = { v:1, exportedAt:new Date().toISOString(), settings:state.settings, records:state.records };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `cycle_records_${todayKey()}.json`;
-      a.click();
-      setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
-      toast("已导出 JSON。","✓");
-    }
-
-    function importJSONText(text){
-      try{
-        const obj = JSON.parse(text);
-        if(!obj || typeof obj !== "object") throw new Error("bad");
-        const recs = Array.isArray(obj.records) ? obj.records : [];
-        const clean = [];
-        for(const r of recs){
-          const start = normalizeDateInput(r.start);
-          const end = normalizeDateInput(r.end || "");
-          const note = (r.note || "").toString().trim().slice(0,60);
-          if(!start) continue;
-          if(end){
-            const a=toDate(start), b=toDate(end);
-            if(daysBetween(a,b) < 0) continue;
+        if(e){
+          let cur = new Date(s);
+          while(cur <= e){
+            const k = iso(cur);
+            tagsByDate.set(k, (tagsByDate.get(k)||[]).concat([{ kind:"period", label:"经期" }]));
+            cur.setDate(cur.getDate()+1);
           }
-          clean.push({ id: (r.id && typeof r.id==="string") ? r.id : uid(), start, end: end || null, note });
+        }else{
+          const k = r.start;
+          tagsByDate.set(k, (tagsByDate.get(k)||[]).concat([{ kind:"period", label:"经期?" }]));
         }
-        const byStart = new Map();
-        clean.forEach(r=> byStart.set(r.start, r));
-        state.records = Array.from(byStart.values());
+      }
 
-        if(obj.settings){
-          const avgN = parseInt(obj.settings.avgN || state.settings.avgN, 10);
-          const window = parseInt(obj.settings.window || state.settings.window, 10);
-          state.settings.avgN = clamp(avgN || 6, 3, 999);
-          state.settings.window = clamp(window || 2, 0, 14);
+      if(pred){
+        const d = toDate(pred);
+        for(let off = -window; off <= window; off++){
+          const dd = new Date(d);
+          dd.setDate(dd.getDate() + off);
+          const k = iso(dd);
+          tagsByDate.set(k, (tagsByDate.get(k)||[]).concat([{ kind:"predict", label: off===0 ? "预测" : "预测" }]));
         }
-
-        saveState(); rerenderAll();
-        toast(`导入完成：${state.records.length} 条记录。`,"✓");
-      }catch(e){
-        toast("导入失败：不是有效的记录文件。","!");
       }
-    }
 
-    function openModal(){
-      $("modalBackdrop").style.display="flex";
-      $("modalBackdrop").setAttribute("aria-hidden","false");
-      $("avgN").value = String(state.settings.avgN==null ? 6 : state.settings.avgN);
-      $("window").value = String(state.settings.window==null ? 2 : state.settings.window);
-    }
-    function closeModal(){
-      $("modalBackdrop").style.display="none";
-      $("modalBackdrop").setAttribute("aria-hidden","true");
-    }
+      const todayK = todayKey();
 
-    // 快速添加
-    function quickStartToday(){
-      const today = todayKey();
-      const openIdx = state.records.findIndex(r => !r.end);
-      if(openIdx !== -1){
-        toast("你已经有一条未结束的记录啦～先结束它再开始新的一条。( ´ ▽ ` )ﾉ");
-        return;
-      }
-      state.records.unshift({ start: today, end: "", note: "" });
-      saveState();
-      renderAll();
-      toast("已快速开始：今天 ✅");
-    }
+      for(let i=0;i<42;i++){
+        const d = new Date(start);
+        d.setDate(start.getDate()+i);
+        const k = iso(d);
 
-    function quickEndToday(){
-      const today = todayKey();
-      const idx = state.records.findIndex(r => !r.end);
-      if(idx === -1){
-        toast("没有找到“进行中”的记录～先点“快速开始”再结束！爱你！(๑•̀ㅂ•́)و✧");
-        return;
-      }
-      const r = state.records[idx];
-      if(today < r.start){
-        toast("今天比开始日期更早？小乖先不结束，检查一下日期吧～");
-        return;
-      }
-      r.end = today;
-      saveState();
-      renderAll();
-      toast("已快速结束：今天 ✅");
-    }
+        const cell = document.createElement("div");
+        cell.className = "day";
+        if(!inSameMonth(d,y,m)) cell.classList.add("muted");
+        if(k === todayK) cell.classList.add("today");
 
+        const n = document.createElement("div");
+        n.className = "n";
+        n.textContent = String(d.getDate());
+        cell.appendChild(n);
 
-    // bind
-    $("btnAdd").addEventListener("click", addRecord);
-    $("btnFillToday").addEventListener("click", ()=>{ $("start").value = todayKey(); toast("开始日期已填今天。","✓"); });
-    $("btnQuickStart").addEventListener("click", quickStartToday);
-    $("btnQuickEnd").addEventListener("click", quickEndToday);
-    $("btnHelp").addEventListener("click", ()=> toast("悄悄告诉小乖的小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
-
-    $("btnExport").addEventListener("click", exportJSON);
-    $("btnImport").addEventListener("click", ()=> $("file").click());
-    $("file").addEventListener("change", ()=>{
-      const f = $("file").files && $("file").files[0];
-      if(!f) return;
-      if(f.size > 2_000_000){ toast("文件有点大（>2MB），先确认是不是选错了。","!"); $("file").value=""; return; }
-      const rd = new FileReader();
-      rd.onload = ()=> { importJSONText(String(rd.result || "")); $("file").value=""; };
-      rd.readAsText(f, "utf-8");
-    });
-
-    $("btnClear").addEventListener("click", ()=>{
-      if(confirm("真的要清空所有记录吗？这一步不可撤销ᵟຶᴖ ᵟຶ")){
-        state.records = [];
-        state._editing = null;
-        saveState();
-        rerenderAll();
-        toast("已清空。","✓");
-      }
-    });
-
-    $("btnSettings").addEventListener("click", openModal);
-    $("btnClose").addEventListener("click", closeModal);
-    $("modalBackdrop").addEventListener("click", (e)=>{ if(e.target === $("modalBackdrop")) closeModal(); });
-
-    $("btnDefaults").addEventListener("click", ()=>{
-      state.settings = clone(DEFAULTS.settings);
-      saveState(); rerenderAll();
-      toast("设置已恢复默认。","✓");
-      openModal();
-    });
-
-    $("btnSaveSettings").addEventListener("click", ()=>{
-      const avgN = parseInt($("avgN").value, 10);
-      const window = parseInt($("window").value, 10);
-      state.settings.avgN = clamp(avgN || 6, 3, 999);
-      state.settings.window = clamp(window || 2, 0, 14);
-      saveState(); rerenderAll(); closeModal();
-      toast("设置已保存。","✓");
-    });
-
-    $("prevMonth").addEventListener("click", ()=>{
-      view.m -= 1;
-      if(view.m < 0){ view.m = 11; view.y -= 1; }
-      buildCal();
-    });
-    $("nextMonth").addEventListener("click", ()=>{
-      view.m += 1;
-      if(view.m > 11){ view.m = 0; view.y += 1; }
-      buildCal();
-    });
-    $("todayMonth").addEventListener("click", ()=>{
-      const d = today(); view.y=d.getFullYear(); view.m=d.getMonth();
-      buildCal(); toast("已回到本月。","✓");
-    });
-
-    document.querySelectorAll(".theme").forEach(el=>{ el.addEventListener("click", ()=> applyTheme(el.dataset.theme)); });
-
-    window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && $("modalBackdrop").style.display==="flex") closeModal(); });
-
-    function init(){
-      applyTheme(state.theme || "lavender");
-      rerenderAll();
-      toast("已准备好：先加一条“开始日期”小乖就能算周期啦。","✦");
-    }
-    init();
-  </script>
-
-  <!-- Service Worker -->
-  <script>
-    (function(){
-      if (!('serviceWorker' in navigator)) return;
-      window.addEventListener('load', function(){
-        navigator.serviceWorker.register('./sw.js').catch(function(err){
-          console.warn('[PWA] SW register failed', err);
-        });
-      });
-    })();
-  </script>
-<script>
-  const dbg = document.createElement('div');
-  dbg.style.cssText =
-    'position:fixed;left:8px;bottom:8px;z-index:99999;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;';
-  document.body.appendChild(dbg);
-  setInterval(()=>{ dbg.textContent = `innerWidth=${window.innerWidth}, innerHeight=${window.innerHeight}, dpr=${window.devicePixelRatio}`; }, 300);
-</script>
-</body>
-</html>
+        const mk = document.createElement("div");
+        mk.className = "mark";
+        const tags = tagsByDate.get(k) || [];
+        for(const t of tags.slice(0,3)){
+          const s = document.createElement("span");
+          s.className = "tag " + (t.kind||"");
+          s
