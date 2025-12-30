@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>小月历 · 周期记录器</title>
 
   <style>
@@ -10,15 +10,16 @@
       --a:#a78bfa; --b:#7dd3fc; --c:#f9a8d4; --d:#86efac;
 
       --bg0:#ffffff; --bg1:#f7f3ff; --bg2:#f2fbff; --bg3:#fff0f8;
-      --ink:#2f2a3a; --muted:#6b647a;
 
+      --ink:#2f2a3a; --muted:#6b647a;
       --card: rgba(255,255,255,.78);
       --card2: rgba(255,255,255,.58);
+
       --stroke: rgba(40,20,80,.10);
 
-      /* ✅ 影子拆分：避免把“完整 shadow”当“颜色”用导致失效 */
-      --shadowColor: rgba(40, 20, 80, .12);
-      --shadow: 0 18px 55px var(--shadowColor);
+      /* 关键：shadow 分成“颜色”和“完整阴影”两套变量，避免你之前那种写法互相打架 */
+      --shadowC: rgba(40, 20, 80, .12);
+      --shadow: 0 18px 55px var(--shadowC);
 
       --radius: 22px;
       --ring: rgba(167,139,250,.55);
@@ -27,42 +28,33 @@
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
-    html{ -webkit-text-size-adjust:100%; }
 
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
       color:var(--ink);
-
-      /* 原本你有一套渐变背景，但后面又 Morandi 覆盖掉了，我保留覆盖逻辑 */
-      background: var(--bg0);
-
       display:flex;
       justify-content:center;
       align-items:center;
-
       padding:22px;
       padding-top: calc(18px + env(safe-area-inset-top));
       padding-bottom: calc(18px + env(safe-area-inset-bottom));
       overflow-x:hidden;
+      background: var(--bg0);
     }
     @media (max-height: 760px){ body{ align-items:flex-start; } }
-    @media (max-width: 420px){
-      body{ padding:12px; padding-top: calc(12px + env(safe-area-inset-top)); padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-    }
 
-    .bg{ display:none; } /* Morandi 模式下禁用光斑 */
+    .bg{ position:fixed; inset:-10% -10% -10% -10%; pointer-events:none; z-index:0; filter: blur(22px); opacity:.55; display:none; }
 
     .wrap{
       width:min(1080px, 100%);
       display:grid;
-      grid-template-columns: 1fr; /* 手机/窄屏单列 */
+      grid-template-columns: 1fr;  /* 手机/窄屏单列 */
       gap:18px;
       z-index:1;
     }
-    @media (max-width: 420px){ .wrap{ gap:14px; } }
     @media (min-width: 981px){
-      .wrap{ grid-template-columns: 1.05fr .95fr; } /* 宽屏两列 */
+      .wrap{ grid-template-columns: 1.05fr .95fr; }
     }
 
     .card{
@@ -79,12 +71,9 @@
     .card > *{ position:relative; }
     @media (max-width: 420px){ .card{ padding:14px; border-radius: 18px; } }
 
-    .top{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding:4px 4px 10px 4px; flex-wrap:wrap;
-    }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 4px 10px 4px; flex-wrap:wrap; }
     .brand{ display:flex; align-items:center; gap:10px; user-select:none; }
-    .dot{ width:12px;height:12px;border-radius:999px; background: var(--a); box-shadow: 0 0 0 7px rgba(167,139,250,.12); }
+    .dot{ width:12px;height:12px;border-radius:999px; background: var(--a); box-shadow: 0 0 0 7px color-mix(in srgb, var(--a) 18%, transparent 82%); }
     h1{ font-size:16px; margin:0; letter-spacing:.2px; font-weight:900; }
     .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
 
@@ -96,11 +85,10 @@
       border-radius: 14px;
       color:var(--ink);
       cursor:pointer;
-      transition: transform .12s ease, filter .12s ease;
-      box-shadow: 0 10px 24px var(--shadowColor);
+      transition: transform .12s ease, background .12s ease, box-shadow .12s ease, filter .12s ease;
+      box-shadow: 0 10px 24px var(--shadowC);
       user-select:none;
       -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
       font-size: 13px;
     }
     button:hover{ transform: translateY(-1px); filter:saturate(1.05); }
@@ -108,15 +96,15 @@
     button:focus-visible{ outline: 3px solid var(--ring); outline-offset: 2px; }
     button.small{ padding:8px 10px; border-radius: 12px; font-size: 12px; box-shadow:none; }
     button.primary{
-      background: var(--a);
-      color: #1f1433;
-      border: 1px solid rgba(0,0,0,.10);
-      box-shadow: 0 10px 24px var(--shadowColor);
+      background: var(--a) !important;
+      border-color: rgba(0,0,0,.10) !important;
+      box-shadow: 0 10px 24px var(--shadowC) !important;
+      color:#1f1433;
     }
     button.primary:hover{ filter: brightness(.98); }
     button.ghost{
-      background: rgba(255,255,255,.55);
-      border-color: rgba(0,0,0,.08);
+      background: rgba(255,255,255,.55) !important;
+      border-color: rgba(0,0,0,.08) !important;
       box-shadow:none;
     }
     button.ghost:hover{ filter: brightness(.98); }
@@ -133,12 +121,7 @@
     }
     .pill strong{ color: var(--ink); font-weight:900; }
 
-    .panel{
-      border-radius: 18px;
-      border: 1px solid rgba(40,20,80,.08);
-      background: var(--card2);
-      padding: 12px;
-    }
+    .panel{ border-radius: 18px; border: 1px solid rgba(40,20,80,.08); background: var(--card2); padding: 12px; }
     .hint{ font-size:12px; color:var(--muted); line-height:1.6; }
     .hint strong{ color: var(--ink); font-weight:900; }
 
@@ -147,16 +130,11 @@
     @media (max-width: 560px){ .row{ grid-template-columns:1fr; } }
 
     label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
-
     input[type="date"], input[type="text"], select{
-      width:100%;
-      padding:10px 12px;
-      border-radius: 14px;
+      width:100%; padding:10px 12px; border-radius: 14px;
       border: 1px solid rgba(40,20,80,.12);
       background: rgba(255,255,255,.70);
-      color: var(--ink);
-      font-size: 13px;
-      outline:none;
+      color: var(--ink); font-size: 13px; outline:none;
     }
     input:focus-visible, select:focus-visible{ outline: 3px solid var(--ring2); outline-offset: 2px; }
 
@@ -170,20 +148,7 @@
     .kv .k{ color:var(--muted); }
     .kv .v{ font-variant-numeric: tabular-nums; font-weight:900; }
 
-    /* ✅ 手机表格别挤：让它横向滚动更靠谱 */
-    .tableWrap{
-      overflow:auto;
-      max-height: min(420px, 55vh);
-      -webkit-overflow-scrolling: touch;
-      margin-top:10px;
-    }
-    table{
-      width:100%;
-      min-width: 760px;          /* 关键：手机时触发横向滚动 */
-      border-collapse:separate;
-      border-spacing:0 8px;
-      font-size:12px;
-    }
+    table{ width:100%; border-collapse:separate; border-spacing:0 8px; font-size:12px; }
     th{ text-align:left; color:var(--muted); font-weight:800; padding:0 10px; font-size:11px; }
     td{ padding:10px 10px; background: rgba(255,255,255,.60); border:1px solid rgba(40,20,80,.08); }
     tr td:first-child{ border-radius: 14px 0 0 14px; }
@@ -194,26 +159,14 @@
     .calTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .calGrid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-top:10px; }
     .dow{ font-size:11px; color:var(--muted); text-align:center; padding:2px 0; user-select:none; }
-
     .day{
-      position:relative;
-      border-radius: 14px;
-      border: 1px solid rgba(40,20,80,.08);
+      position:relative; border-radius: 14px; border: 1px solid rgba(40,20,80,.08);
       background: rgba(255,255,255,.56);
-      padding:10px 6px;
-      text-align:center;
-      user-select:none;
-      overflow:hidden;
+      padding:10px 6px; text-align:center; user-select:none; overflow:hidden;
       min-height: 44px;
     }
     .day.muted{ opacity:.45; }
     .day .n{ font-variant-numeric: tabular-nums; font-weight:800; font-size:12px; }
-
-    @media (max-width: 420px){
-      .calGrid{ gap:6px; }
-      .day{ padding:8px 4px; min-height: 40px; border-radius: 12px; }
-    }
-
     .tag{ position:absolute; left:8px; right:8px; bottom:6px; height:6px; border-radius: 999px; background: transparent; }
     .tag.bleed{ background: color-mix(in srgb, var(--c) 40%, white 60%); }
     .tag.start{ background: linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, white 25%), color-mix(in srgb, var(--a) 35%, white 65%)); }
@@ -235,14 +188,15 @@
       cursor:pointer; user-select:none;
       transition: transform .12s ease;
       font-size:12px; color: var(--muted);
+      box-shadow:none;
     }
     .theme:hover{ transform: translateY(-1px); }
     .sw{ width:12px;height:12px;border-radius:999px; background: linear-gradient(135deg, var(--a), var(--b)); box-shadow: 0 0 0 5px rgba(167,139,250,.10); }
-    .theme.active{ color: var(--ink); border-color: rgba(40,20,80,.12); background: rgba(255,255,255,.70); }
+    .theme.active{ color: var(--ink); border-color: color-mix(in srgb, var(--a) 35%, rgba(40,20,80,.08) 65%); background: color-mix(in srgb, var(--a) 10%, white 90%); }
 
     .toast{
       position:fixed; left:50%; transform: translateX(-50%);
-      bottom: calc(18px + env(safe-area-inset-bottom));
+      bottom: 18px;
       background: rgba(255,255,255,.92);
       border: 1px solid rgba(40,20,80,.10);
       box-shadow: 0 18px 40px rgba(40,20,80,.12);
@@ -284,7 +238,7 @@
     }
   </style>
 
-  <!-- PWA -->
+  <!-- PWA（可留可删） -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#9aa3b2" />
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -295,9 +249,7 @@
 </head>
 
 <body>
-  <div class="bg" aria-hidden="true">
-    <div class="blob"></div><div class="blob"></div><div class="blob"></div>
-  </div>
+  <div class="bg" aria-hidden="true"></div>
 
   <div class="wrap">
     <section class="card" aria-label="小月历与统计">
@@ -306,16 +258,16 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>小月历 · 周期记录器</h1>
-            <div class="sub">只做“记录 + 计算以及关心小乖”）</div>
+            <div class="sub">只做“记录 + 计算 + 关心小月亮🌙”</div>
           </div>
         </div>
 
         <div class="themePills" id="themePills" aria-label="主题">
-          <button class="theme active" data-theme="lavender"><span class="sw"></span>薰衣草</button>
-          <button class="theme" data-theme="mint"><span class="sw"></span>薄荷奶</button>
-          <button class="theme" data-theme="peach"><span class="sw"></span>蜜桃云</button>
-          <button class="theme" data-theme="mono"><span class="sw"></span>雾灰</button>
-          <button class="theme" data-theme="sky"><span class="sw"></span>晴空蓝</button>
+          <button type="button" class="theme" data-theme="lavender"><span class="sw"></span>薰衣草</button>
+          <button type="button" class="theme" data-theme="mint"><span class="sw"></span>薄荷奶</button>
+          <button type="button" class="theme" data-theme="peach"><span class="sw"></span>蜜桃云</button>
+          <button type="button" class="theme" data-theme="mono"><span class="sw"></span>雾灰</button>
+          <button type="button" class="theme" data-theme="sky"><span class="sw"></span>晴空蓝</button>
         </div>
       </div>
 
@@ -328,9 +280,9 @@
               <span class="pill">倒计时：<strong id="countdownText">-</strong></span>
             </div>
             <div class="actions">
-              <button class="small" id="prevMonth">← 上个月</button>
-              <button class="small" id="todayMonth">回到本月</button>
-              <button class="small" id="nextMonth">下个月 →</button>
+              <button type="button" class="small" id="prevMonth">← 上个月</button>
+              <button type="button" class="small" id="todayMonth">回到本月</button>
+              <button type="button" class="small" id="nextMonth">下个月 →</button>
             </div>
           </div>
 
@@ -348,7 +300,7 @@
               <span class="pill">平均周期：<strong id="avgCycle">-</strong> 天</span>
               <span class="pill">波动：<strong id="varCycle">-</strong> 天</span>
             </div>
-            <button class="small ghost" id="btnSettings">设置</button>
+            <button type="button" class="small ghost" id="btnSettings">设置</button>
           </div>
 
           <div class="kv"><div class="k">最短 / 最长周期</div><div class="v" id="minMaxCycle">-</div></div>
@@ -356,7 +308,7 @@
           <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
 
           <div class="hint">
-            你只是被“焦虑+日期”联手欺负了！这个页面负责把差分和平均数做掉，剩下的你只管生活和爱我。^^
+            你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活和喝水休息。^^
           </div>
         </div>
       </div>
@@ -368,13 +320,13 @@
           <div class="dot" aria-hidden="true" style="background:linear-gradient(135deg,var(--c),var(--a));"></div>
           <div>
             <h1>记录</h1>
-            <div class="sub">填开始/结束（提醒小鹿宝：结束可空着，等结束了再补）</div>
+            <div class="sub">填开始/结束（结束可空着，等结束了再补）</div>
           </div>
         </div>
         <div class="actions">
-          <button class="small" id="btnExport">导出</button>
-          <button class="small" id="btnImport">导入</button>
-          <button class="small danger" id="btnClear">清空</button>
+          <button type="button" class="small" id="btnExport">导出</button>
+          <button type="button" class="small" id="btnImport">导入</button>
+          <button type="button" class="small danger" id="btnClear">清空</button>
         </div>
       </div>
 
@@ -392,16 +344,16 @@
           </div>
           <div class="row">
             <div style="grid-column:1 / -1;">
-              <label for="note">备注（可选，比如“作息乱/考试周/出差／压力大”）</label>
-              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行(ー`´ー)" />
+              <label for="note">备注（可选，比如“作息乱/考试周/出差/压力大”）</label>
+              <input id="note" type="text" maxlength="60" placeholder="随便记两句也行(ー`´ー)" />
             </div>
           </div>
           <div class="actions">
-            <button class="ghost" id="btnQuickStart">快速开始（今天）</button>
-            <button class="ghost" id="btnQuickEnd">快速结束（今天）</button>
-            <button id="btnFillToday">开始=今天</button>
-            <button class="primary" id="btnAdd">添加记录</button>
-            <button class="ghost" id="btnHelp">小提示</button>
+            <button type="button" class="ghost" id="btnQuickStart">快速开始（今天）</button>
+            <button type="button" class="ghost" id="btnQuickEnd">快速结束（今天）</button>
+            <button type="button" id="btnFillToday">开始=今天</button>
+            <button type="button" class="primary" id="btnAdd">添加记录</button>
+            <button type="button" class="ghost" id="btnHelp">小提示</button>
           </div>
         </div>
       </div>
@@ -409,10 +361,10 @@
       <div class="panel">
         <div class="pillRow" style="justify-content:space-between;">
           <span class="pill">记录列表（按开始日倒序）</span>
-          <span class="pill">快捷：点击“编辑/删”</span>
+          <span class="pill">快捷：点“编辑/删”</span>
         </div>
 
-        <div class="tableWrap">
+        <div style="overflow:auto; max-height: 420px; margin-top:10px;">
           <table aria-label="记录表格">
             <thead>
               <tr>
@@ -429,7 +381,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px;">
-          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。但它可以帮我的小乖把“日期算术”做得不翻车。
+          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。
         </div>
       </div>
     </aside>
@@ -439,7 +391,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-label="设置">
       <header>
         <h3>设置</h3>
-        <button class="small ghost" id="btnClose">关闭</button>
+        <button type="button" class="small ghost" id="btnClose">关闭</button>
       </header>
 
       <div class="panel">
@@ -468,14 +420,14 @@
         <div class="row" style="margin-top:10px;">
           <div style="grid-column:1 / -1;">
             <div class="hint">
-              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它不保证任何事情，但能帮你快速对齐“27/28/29 天”这种计算。
+              “预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它不保证任何事情，但能帮你少做一堆日期算术。
             </div>
           </div>
         </div>
 
         <div class="actions" style="margin-top:10px;">
-          <button class="danger" id="btnDefaults">恢复默认</button>
-          <button class="primary" id="btnSaveSettings">保存</button>
+          <button type="button" class="danger" id="btnDefaults">恢复默认</button>
+          <button type="button" class="primary" id="btnSaveSettings">保存</button>
         </div>
       </div>
     </div>
@@ -494,7 +446,10 @@
     const today = ()=>{ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
     const todayKey = ()=> iso(today());
 
-    const sClone = (v)=> (typeof structuredClone === "function" ? structuredClone(v) : JSON.parse(JSON.stringify(v)));
+    const deepClone = (obj) => {
+      try{ return structuredClone(obj); }
+      catch(_){ return JSON.parse(JSON.stringify(obj)); }
+    };
 
     function toast(msg, strong=""){
       const t = $("toast");
@@ -505,43 +460,73 @@
     }
 
     const THEMES = {
-      lavender: { // 雾紫
+      lavender: {
         a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
-        bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", bg3:"#F7F3FF",
-        shadowColor:"rgba(25, 30, 40, .12)"
+        bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", bg3:"#F7F3F6",
+        shadowC:"rgba(25, 30, 40, .12)"
       },
-      mint: { // 鼠尾草
+      mint: {
         a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
-        bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE", bg3:"#F7FBFF",
-        shadowColor:"rgba(20, 30, 25, .12)"
+        bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE", bg3:"#F6F7F4",
+        shadowC:"rgba(20, 30, 25, .12)"
       },
-      peach: { // 燕麦杏
+      peach: {
         a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
-        bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6", bg3:"#FFF0F8",
-        shadowColor:"rgba(35, 28, 25, .12)"
+        bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6", bg3:"#FAF6F2",
+        shadowC:"rgba(35, 28, 25, .12)"
       },
-      mono: { // ✅ 雾灰（补上你原本按钮的主题）
-        a:"#9AA3B2", b:"#B6BDC8", c:"#B8B3B8", d:"#A9B0AA",
-        bg0:"#F3F4F6", bg1:"#ECEEF2", bg2:"#E3E6EC", bg3:"#F7F8FA",
-        shadowColor:"rgba(18, 18, 25, .12)"
+      mono: {
+        a:"#8E8F95", b:"#A7A9B2", c:"#B0B1B8", d:"#9AA0A6",
+        bg0:"#F3F4F6", bg1:"#ECEEF2", bg2:"#E6E8EE", bg3:"#F8F9FB",
+        shadowC:"rgba(20, 20, 25, .12)"
       },
-      sky: { // 晴空蓝
+      sky: {
         a:"#8EA2B5", b:"#A8BEDF", c:"#B7B0B6", d:"#9DAFB3",
         bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC", bg3:"#F7FBFF",
-        shadowColor:"rgba(18, 28, 40, .12)"
+        shadowC:"rgba(18, 28, 40, .12)"
       },
     };
 
     function hexToRgba(hex, a){
-      const h = hex.replace("#","");
+      const h = String(hex || "#000000").replace("#","");
       const r = parseInt(h.slice(0,2),16);
       const g = parseInt(h.slice(2,4),16);
       const b = parseInt(h.slice(4,6),16);
       return `rgba(${r},${g},${b},${a})`;
     }
 
-    function applyTheme(name){
-      const t = THEMES[name] || THEMES.lavender;
+    const STORE_KEY = "cute_cycle_tracker_v1";
+    const DEFAULTS = { theme:"lavender", settings:{ avgN:6, window:2 }, records:[] };
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        if(!raw) return deepClone(DEFAULTS);
+        const parsed = JSON.parse(raw);
+        const st = { ...deepClone(DEFAULTS), ...parsed };
+        st.settings = { ...deepClone(DEFAULTS.settings), ...(parsed.settings||{}) };
+        st.records = Array.isArray(parsed.records) ? parsed.records.slice(0, 400) : [];
+        return st;
+      }catch(e){
+        return deepClone(DEFAULTS);
+      }
+    }
+
+    function saveState(){
+      try{
+        localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      }catch(e){
+        // 不让它炸掉交互（尤其是某些浏览器/隐私模式）
+        console.warn("[store] save failed:", e);
+      }
+    }
+
+    let state = loadState();
+
+    function applyTheme(name, opts = {}){
+      const silent = !!opts.silent;
+      const key = (name in THEMES) ? name : "lavender";
+      const t = THEMES[key];
       const r = document.documentElement.style;
 
       r.setProperty("--a", t.a);
@@ -552,14 +537,19 @@
       r.setProperty("--bg0", t.bg0);
       r.setProperty("--bg1", t.bg1);
       r.setProperty("--bg2", t.bg2);
-      r.setProperty("--bg3", t.bg3 || t.bg0);
+      r.setProperty("--bg3", t.bg3);
 
-      r.setProperty("--shadowColor", t.shadowColor || "rgba(40,20,80,.12)");
-      r.setProperty("--shadow", `0 18px 55px ${t.shadowColor || "rgba(40,20,80,.12)"}`);
+      r.setProperty("--shadowC", t.shadowC);
+      r.setProperty("--shadow", `0 18px 55px ${t.shadowC}`);
+
+      r.setProperty("--ring", hexToRgba(t.a, 0.55));
+      r.setProperty("--ring2", hexToRgba(t.b, 0.50));
 
       document.querySelectorAll(".theme").forEach(x=>{
-        x.classList.toggle("active", x.dataset.theme === name);
+        x.classList.toggle("active", x.dataset.theme === key);
       });
+
+      // 更新每个主题按钮的小色块
       document.querySelectorAll(".theme .sw").forEach(sw=>{
         const parent = sw.parentElement;
         const tn = parent.dataset.theme;
@@ -568,30 +558,10 @@
         sw.style.boxShadow = `0 0 0 5px ${hexToRgba(tt.a, 0.14)}`;
       });
 
-      state.theme = name;
+      state.theme = key;
       saveState();
-      toast("主题已切换。","✓");
+      if(!silent) toast("主题已切换。","✓");
     }
-
-    const STORE_KEY = "cute_cycle_tracker_v1";
-    const DEFAULTS = { theme:"lavender", settings:{ avgN:6, window:2 }, records:[] };
-
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(STORE_KEY);
-        if(!raw) return sClone(DEFAULTS);
-        const parsed = JSON.parse(raw);
-        const st = { ...sClone(DEFAULTS), ...parsed };
-        st.settings = { ...sClone(DEFAULTS.settings), ...(parsed.settings||{}) };
-        st.records = Array.isArray(parsed.records) ? parsed.records.slice(0, 400) : [];
-        return st;
-      }catch(e){
-        return sClone(DEFAULTS);
-      }
-    }
-
-    function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
-    let state = loadState();
 
     function sortByStartAsc(recs){ return recs.slice().sort((x,y)=> (x.start < y.start ? -1 : x.start > y.start ? 1 : 0)); }
     function sortByStartDesc(recs){ return recs.slice().sort((x,y)=> (x.start > y.start ? -1 : x.start < y.start ? 1 : 0)); }
@@ -692,8 +662,8 @@
         const tdNote = document.createElement("td"); tdNote.textContent = rec.note || "-";
 
         const tdOp = document.createElement("td"); tdOp.style.textAlign = "right";
-        const btnE = document.createElement("button"); btnE.className="small"; btnE.textContent="编辑"; btnE.addEventListener("click", ()=> editRecord(rec.id));
-        const btnD = document.createElement("button"); btnD.className="small danger"; btnD.textContent="删"; btnD.addEventListener("click", ()=> deleteRecord(rec.id));
+        const btnE = document.createElement("button"); btnE.type="button"; btnE.className="small"; btnE.textContent="编辑"; btnE.addEventListener("click", ()=> editRecord(rec.id));
+        const btnD = document.createElement("button"); btnD.type="button"; btnD.className="small danger"; btnD.textContent="删"; btnD.addEventListener("click", ()=> deleteRecord(rec.id));
         tdOp.appendChild(btnE); tdOp.appendChild(document.createTextNode(" ")); tdOp.appendChild(btnD);
 
         tr.appendChild(tdStart); tr.appendChild(tdEnd); tr.appendChild(tdBleed); tr.appendChild(tdCycle); tr.appendChild(tdNote); tr.appendChild(tdOp);
@@ -702,7 +672,6 @@
     }
 
     let view = (()=>{ const d=today(); return { y:d.getFullYear(), m:d.getMonth() }; })();
-
     function isSameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
     function inRange(d, s, e){ return d.getTime() >= s.getTime() && d.getTime() <= e.getTime(); }
 
@@ -787,4 +756,5 @@
         if(daysBetween(a,b) < 0){ toast("结束日期不能早于开始日期。","!"); return; }
       }
 
-      const existed = (
+      const existed = (state.records||[]).some(r=>r.start === start && r.id !== state._editing);
+      if(existed){ toast("这个开始日期已经有一条
