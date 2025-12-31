@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>小月历 · 周期记录器</title>
   <style>
     :root{
@@ -15,15 +15,12 @@
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
+    
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
       color:var(--ink);
-      background:
-        radial-gradient(1200px 900px at 12% 12%, var(--bg1), transparent 60%),
-        radial-gradient(1200px 900px at 88% 16%, var(--bg2), transparent 60%),
-        radial-gradient(900px 700px at 20% 88%, var(--bg3), transparent 55%),
-        linear-gradient(180deg, var(--bg0), #f7fbff);
+      background: var(--bg0);
       display:flex;
       justify-content:center;
       align-items:center;
@@ -34,6 +31,7 @@
     }
     @media (max-height: 760px){ body{ align-items:flex-start; } }
 
+    /* 背景动画 */
     .bg{ position:fixed; inset:-10% -10% -10% -10%; pointer-events:none; z-index:0; filter: blur(22px); opacity:.55; }
     .blob{
       position:absolute; width:min(520px, 70vw); aspect-ratio:1/1;
@@ -54,8 +52,8 @@
       100%{ transform: translate(0,0) rotate(0deg) scale(1); }
     }
 
-    .wrap{ width:min(1080px, 100%); display:grid; grid-template-columns: 1.05fr .95fr; gap:18px; z-index:1; }
-    @media (max-width: 980px){ .wrap{ grid-template-columns:1fr; } }
+    .wrap{ width:min(1080px, 100%); display:grid; grid-template-columns: 1fr; gap:18px; z-index:1; }
+    @media (min-width: 980px){ .wrap{ grid-template-columns: 1.05fr .95fr; } }
 
     .card{
       background:var(--card);
@@ -66,15 +64,6 @@
       padding:18px;
       position:relative;
       overflow:hidden;
-    }
-    .card::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background:
-        radial-gradient(600px 280px at 10% 0%, rgba(167,139,250,.16), transparent 60%),
-        radial-gradient(520px 260px at 90% 10%, rgba(125,211,252,.14), transparent 55%),
-        radial-gradient(420px 240px at 70% 100%, rgba(249,168,212,.12), transparent 60%);
-      pointer-events:none;
     }
     .card > *{ position:relative; }
     @media (max-width: 420px){ .card{ padding:14px; border-radius: 18px; } }
@@ -232,9 +221,21 @@
       button:hover, .theme:hover{ transform:none; }
       .bg{ filter: blur(18px); }
     }
-  
-
-    /* Morandi：低饱和纯色风格（覆盖上面的渐变/光斑） */
+    
+    /* --- 芥末的【手机适配魔法】 --- */
+    @media (max-width: 600px) {
+      body {
+        display: block !important;
+        height: auto !important;
+        padding: 10px !important;
+      }
+      .wrap { display: flex; flex-direction: column; gap: 15px; }
+      .card { padding: 12px !important; }
+      .row { grid-template-columns: 1fr !important; }
+      .day { min-height: 38px !important; font-size: 11px !important; }
+      .bg { display: none !important; } 
+    }
+    /* Morandi：低饱和纯色风格 */
     body{ background: var(--bg0); }
     .bg{ display:none; }
     .card::before{ display:none; }
@@ -251,12 +252,9 @@
     }
     button.ghost:hover{ filter: brightness(.98); }
     button{ box-shadow: 0 10px 24px var(--shadow); }
-    input, textarea{
-      background: rgba(255,255,255,.70) !important;
-    }
+    input, textarea{ background: rgba(255,255,255,.70) !important; }
 </style>
 
-  <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#9aa3b2" />
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -267,10 +265,6 @@
 
 </head>
 <body>
-  <div class="bg" aria-hidden="true">
-    <div class="blob"></div><div class="blob"></div><div class="blob"></div>
-  </div>
-
   <div class="wrap">
     <section class="card" aria-label="小月历与统计">
       <div class="top">
@@ -278,7 +272,7 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>小月历 · 周期记录器</h1>
-            <div class="sub">只做“记录 + 计算以及爱你(｡･ω･｡)ﾉ♡”</div>
+            <div class="sub">只做“记录 + 计算以及关心小乖"）</div>
           </div>
         </div>
         <div class="themePills" id="themePills" aria-label="主题">
@@ -307,7 +301,7 @@
           <div class="calGrid" id="calGrid" aria-label="日历"></div>
 
           <div class="hint" style="margin-top:10px;">
-            标记说明：<strong>粉色条</strong>＝记录到的经期天；<strong>渐变条</strong>＝开始日；<strong>蓝色框</strong>＝“按平均周期”预测的下次开始日（只是计算，不是保证）。
+            标记说明：<strong>粉色条</strong>＝记录到的经期天；<strong>渐变条</strong>＝开始日；<strong>蓝色框</strong>＝预测日（仅供参考）。
           </div>
         </div>
 
@@ -322,11 +316,11 @@
           </div>
 
           <div class="kv"><div class="k">最短 / 最长周期</div><div class="v" id="minMaxCycle">-</div></div>
-          <div class="kv"><div class="k">平均经期长度（有填结束日才算）</div><div class="v" id="avgBleed">-</div></div>
+          <div class="kv"><div class="k">平均经期长度</div><div class="v" id="avgBleed">-</div></div>
           <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
 
           <div class="hint">
-            你只是被“焦虑+日期”联手欺负了。我和这个页面负责把差分和平均数做掉，剩下的你只管生活和想我^^
+            你只是被“焦虑+日期”联手欺负了！剩下的你只管生活和爱我。^^
           </div>
         </div>
       </div>
@@ -363,7 +357,7 @@
           <div class="row">
             <div style="grid-column:1 / -1;">
               <label for="note">备注（可选，比如“作息乱/考试周/出差”）</label>
-              <input id="note" type="text" maxlength="60" placeholder="小鹿可爱地记一下也行～" />
+              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行～" />
             </div>
           </div>
           <div class="actions">
@@ -388,17 +382,13 @@
                 <th>开始</th>
                 <th>结束</th>
                 <th>经期长</th>
-                <th>周期(相对上次)</th>
+                <th>周期</th>
                 <th>备注</th>
                 <th style="text-align:right;">操作</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
           </table>
-        </div>
-
-        <div class="hint" style="margin-top:10px;">
-          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。它也不替代任何专业判断，但能帮小乖把“日期算术”做得不翻车。
         </div>
       </div>
     </aside>
@@ -434,14 +424,6 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top:10px;">
-          <div style="grid-column:1 / -1;">
-            <div class="hint">
-              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它不保证任何事情，但能帮你快速对齐“27/28/29 天”这种计算。
-            </div>
-          </div>
-        </div>
-
         <div class="actions" style="margin-top:10px;">
           <button class="danger" id="btnDefaults">恢复默认</button>
           <button class="primary" id="btnSaveSettings">保存</button>
@@ -462,6 +444,7 @@
     const daysBetween = (a,b)=> Math.round((b - a) / 86400000);
     const today = ()=>{ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
     const todayKey = ()=> iso(today());
+    const uid = ()=> Math.random().toString(36).slice(2) + Date.now().toString(36);
 
     function toast(msg, strong=""){
       const t = $("toast");
@@ -472,27 +455,12 @@
     }
 
     const THEMES = {
-      lavender: { // 雾紫
-        a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
-        bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA",
-        shadow:"rgba(25, 30, 40, .12)"
-      },
-      mint: { // 鼠尾草
-        a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
-        bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE",
-        shadow:"rgba(20, 30, 25, .12)"
-      },
-      peach: { // 燕麦杏
-        a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
-        bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6",
-        shadow:"rgba(35, 28, 25, .12)"
-      },
-      sea: { // 雾蓝
-        a:"#8EA2B5", b:"#A6B6C5", c:"#B7B0B6", d:"#9DAFB3",
-        bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC",
-        shadow:"rgba(18, 28, 40, .12)"
-      }
+      lavender: { a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6", bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", shadow:"rgba(25, 30, 40, .12)" },
+      mint: { a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0", bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE", shadow:"rgba(20, 30, 25, .12)" },
+      peach: { a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6", bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6", shadow:"rgba(35, 28, 25, .12)" },
+      mono: { a:"#999999", b:"#bbbbbb", c:"#cccccc", d:"#dddddd", bg0:"#f0f0f0", bg1:"#f0f0f0", bg2:"#f0f0f0", shadow:"rgba(0,0,0,0.1)" }
     };
+    
     function hexToRgba(hex, a){
       const h = hex.replace("#","");
       const r = parseInt(h.slice(0,2),16);
@@ -503,13 +471,8 @@
     function applyTheme(name){
       const t = THEMES[name] || THEMES.lavender;
       const r = document.documentElement.style;
-      r.setProperty("--a", t.a);
-      r.setProperty("--b", t.b);
-      r.setProperty("--c", t.c);
-      r.setProperty("--d", t.d);
-      r.setProperty("--bg1", t.bg1);
-      r.setProperty("--bg2", t.bg2);
-      r.setProperty("--bg3", t.bg3);
+      r.setProperty("--a", t.a); r.setProperty("--b", t.b); r.setProperty("--c", t.c); r.setProperty("--d", t.d);
+      r.setProperty("--bg0", t.bg0); r.setProperty("--bg1", t.bg1); r.setProperty("--bg2", t.bg2);
 
       document.querySelectorAll(".theme").forEach(x=>{
         x.classList.toggle("active", x.dataset.theme === name);
@@ -521,7 +484,6 @@
         sw.style.background = `linear-gradient(135deg, ${tt.a}, ${tt.b})`;
         sw.style.boxShadow = `0 0 0 5px ${hexToRgba(tt.a, 0.14)}`;
       });
-
       state.theme = name;
       saveState();
       toast("主题已切换。","✓");
@@ -536,7 +498,7 @@
         const parsed = JSON.parse(raw);
         const st = { ...structuredClone(DEFAULTS), ...parsed };
         st.settings = { ...structuredClone(DEFAULTS.settings), ...(parsed.settings||{}) };
-        st.records = Array.isArray(parsed.records) ? parsed.records.slice(0, 400) : [];
+        st.records = Array.isArray(parsed.records) ? parsed.records : [];
         return st;
       }catch(e){ return structuredClone(DEFAULTS); }
     }
@@ -616,7 +578,7 @@
         $("predictText").textContent = `${iso(d)}（按均值${p.avg}天）`;
         const cd = countdownTo(d);
         if(cd > 0) $("countdownText").textContent = `还有 ${cd} 天`;
-        else if(cd === 0) $("countdownText").textContent = "就是今天";
+        else if(cd === 0) $("countdownText").textContent = "就是今天啦！";
         else $("countdownText").textContent = `已过 ${Math.abs(cd)} 天`;
       }
     }
@@ -716,7 +678,6 @@
 
     function rerenderAll(){ renderMetrics(); renderTable(); buildCal(); }
 
-    function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
     function normalizeDateInput(v){
       if(!v) return "";
       if(!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "";
@@ -738,223 +699,4 @@
       if(existed){ toast("这个开始日期已经有一条记录了（避免重复）。","!"); return; }
 
       if(state._editing){
-        const idx = state.records.findIndex(r=>r.id === state._editing);
-        if(idx >= 0){
-          state.records[idx] = { ...state.records[idx], start, end: end || null, note: note || "" };
-          state._editing = null;
-          $("btnAdd").textContent = "添加记录";
-          toast("已保存修改。","✓");
-        }
-      }else{
-        state.records.push({ id: uid(), start, end: end || null, note: note || "" });
-        toast("记录已添加。","✓");
-      }
-
-      saveState();
-      $("start").value=""; $("end").value=""; $("note").value="";
-      rerenderAll();
-    }
-
-    function editRecord(id){
-      const rec = (state.records||[]).find(r=>r.id===id);
-      if(!rec) return;
-      $("start").value = rec.start || "";
-      $("end").value = rec.end || "";
-      $("note").value = rec.note || "";
-      state._editing = id;
-      $("btnAdd").textContent = "保存修改";
-      toast("进入编辑模式：改完点“保存修改”。","✎");
-    }
-
-    function deleteRecord(id){
-      const before = (state.records||[]).length;
-      state.records = (state.records||[]).filter(r=>r.id !== id);
-      if(state._editing === id){
-        state._editing = null;
-        $("btnAdd").textContent = "添加记录";
-        $("start").value=""; $("end").value=""; $("note").value="";
-      }
-      if(state.records.length !== before){
-        saveState(); rerenderAll(); toast("已删除。","✓");
-      }
-    }
-
-    function exportJSON(){
-      const data = { v:1, exportedAt:new Date().toISOString(), settings:state.settings, records:state.records };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `cycle_records_${todayKey()}.json`;
-      a.click();
-      setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
-      toast("已导出 JSON。","✓");
-    }
-
-    function importJSONText(text){
-      try{
-        const obj = JSON.parse(text);
-        if(!obj || typeof obj !== "object") throw new Error("bad");
-        const recs = Array.isArray(obj.records) ? obj.records : [];
-        const clean = [];
-        for(const r of recs){
-          const start = normalizeDateInput(r.start);
-          const end = normalizeDateInput(r.end || "");
-          const note = (r.note || "").toString().trim().slice(0,60);
-          if(!start) continue;
-          if(end){
-            const a=toDate(start), b=toDate(end);
-            if(daysBetween(a,b) < 0) continue;
-          }
-          clean.push({ id: (r.id && typeof r.id==="string") ? r.id : uid(), start, end: end || null, note });
-        }
-        const byStart = new Map();
-        clean.forEach(r=> byStart.set(r.start, r));
-        state.records = Array.from(byStart.values());
-
-        if(obj.settings){
-          const avgN = parseInt(obj.settings.avgN || state.settings.avgN, 10);
-          const window = parseInt(obj.settings.window || state.settings.window, 10);
-          state.settings.avgN = clamp(avgN || 6, 3, 999);
-          state.settings.window = clamp(window || 2, 0, 14);
-        }
-
-        saveState(); rerenderAll();
-        toast(`导入完成：${state.records.length} 条记录。`,"✓");
-      }catch(e){
-        toast("导入失败：不是有效的记录文件。","!");
-      }
-    }
-
-    function openModal(){
-      $("modalBackdrop").style.display="flex";
-      $("modalBackdrop").setAttribute("aria-hidden","false");
-      $("avgN").value = String(state.settings.avgN ?? 6);
-      $("window").value = String(state.settings.window ?? 2);
-    }
-    function closeModal(){
-      $("modalBackdrop").style.display="none";
-      $("modalBackdrop").setAttribute("aria-hidden","true");
-    }
-
-    // 快速添加
-    function quickStartToday(){
-      const today = todayKey();
-      const openIdx = state.records.findIndex(r => !r.end);
-      if(openIdx !== -1){
-        toast("你已经有一条未结束的记录啦～先结束它再开始新的一条。( ´ ▽ ` )ﾉ");
-        return;
-      }
-      state.records.unshift({ start: today, end: "", note: "" });
-      saveState();
-      renderAll();
-      toast("已快速开始：今天 ✅");
-    }
-
-    function quickEndToday(){
-      const today = todayKey();
-      const idx = state.records.findIndex(r => !r.end);
-      if(idx === -1){
-        toast("没有找到“进行中”的记录～先点“快速开始”再结束。(๑•̀ㅂ•́)و✧");
-        return;
-      }
-      const r = state.records[idx];
-      if(today < r.start){
-        toast("今天比开始日期更早？我先不结束，检查一下日期吧～");
-        return;
-      }
-      r.end = today;
-      saveState();
-      renderAll();
-      toast("已快速结束：今天 ✅");
-    }
-
-
-    // bind
-    $("btnAdd").addEventListener("click", addRecord);
-    $("btnFillToday").addEventListener("click", ()=>{ $("start").value = todayKey(); toast("开始日期已填今天。","✓"); });
-    $("btnQuickStart").addEventListener("click", quickStartToday);
-    $("btnQuickEnd").addEventListener("click", quickEndToday);
-    $("btnHelp").addEventListener("click", ()=> toast("小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
-
-    $("btnExport").addEventListener("click", exportJSON);
-    $("btnImport").addEventListener("click", ()=> $("file").click());
-    $("file").addEventListener("change", ()=>{
-      const f = $("file").files && $("file").files[0];
-      if(!f) return;
-      if(f.size > 2_000_000){ toast("文件有点大（>2MB），先确认是不是选错了。","!"); $("file").value=""; return; }
-      const rd = new FileReader();
-      rd.onload = ()=> { importJSONText(String(rd.result || "")); $("file").value=""; };
-      rd.readAsText(f, "utf-8");
-    });
-
-    $("btnClear").addEventListener("click", ()=>{
-      if(confirm("真的要清空所有记录吗？这一步不可撤销。")){
-        state.records = [];
-        state._editing = null;
-        saveState();
-        rerenderAll();
-        toast("已清空。","✓");
-      }
-    });
-
-    $("btnSettings").addEventListener("click", openModal);
-    $("btnClose").addEventListener("click", closeModal);
-    $("modalBackdrop").addEventListener("click", (e)=>{ if(e.target === $("modalBackdrop")) closeModal(); });
-
-    $("btnDefaults").addEventListener("click", ()=>{
-      state.settings = structuredClone(DEFAULTS.settings);
-      saveState(); rerenderAll();
-      toast("设置已恢复默认。","✓");
-      openModal();
-    });
-
-    $("btnSaveSettings").addEventListener("click", ()=>{
-      const avgN = parseInt($("avgN").value, 10);
-      const window = parseInt($("window").value, 10);
-      state.settings.avgN = clamp(avgN || 6, 3, 999);
-      state.settings.window = clamp(window || 2, 0, 14);
-      saveState(); rerenderAll(); closeModal();
-      toast("设置已保存。","✓");
-    });
-
-    $("prevMonth").addEventListener("click", ()=>{
-      view.m -= 1;
-      if(view.m < 0){ view.m = 11; view.y -= 1; }
-      buildCal();
-    });
-    $("nextMonth").addEventListener("click", ()=>{
-      view.m += 1;
-      if(view.m > 11){ view.m = 0; view.y += 1; }
-      buildCal();
-    });
-    $("todayMonth").addEventListener("click", ()=>{
-      const d = today(); view.y=d.getFullYear(); view.m=d.getMonth();
-      buildCal(); toast("已回到本月。","✓");
-    });
-
-    document.querySelectorAll(".theme").forEach(el=>{ el.addEventListener("click", ()=> applyTheme(el.dataset.theme)); });
-
-    window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && $("modalBackdrop").style.display==="flex") closeModal(); });
-
-    function init(){
-      applyTheme(state.theme || "lavender");
-      rerenderAll();
-      toast("已准备好：先加一条“开始日期”就能算周期啦。","✦");
-    }
-    init();
-  </script>
-
-  <!-- Service Worker -->
-  <script>
-    (function(){
-      if (!('serviceWorker' in navigator)) return;
-      window.addEventListener('load', function(){
-        navigator.serviceWorker.register('./sw.js').catch(function(err){
-          console.warn('[PWA] SW register failed', err);
-        });
-      });
-    })();
-  </script>
-
-</body>
-</html>
+     
