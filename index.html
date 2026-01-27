@@ -164,13 +164,39 @@
     }
     .day.muted{ opacity:.45; }
     .day .n{ font-variant-numeric: tabular-nums; font-weight:800; font-size:12px; }
-    .tag{ position:absolute; left:8px; right:8px; bottom:6px; height:6px; border-radius: 999px; background: transparent; }
-    .tag.bleed{ background: color-mix(in srgb, var(--c) 40%, white 60%); }
-    .tag.start{ background: linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, white 25%), color-mix(in srgb, var(--a) 35%, white 65%)); }
-    .tag.predict{ background: color-mix(in srgb, var(--b) 45%, white 55%); }
-    .tag.fertile{ background: color-mix(in srgb, var(--d) 40%, white 60%); }
-    .tag.ovul{ background: linear-gradient(135deg, color-mix(in srgb, var(--d) 75%, white 25%), color-mix(in srgb, var(--b) 35%, white 65%)); }
+    .tag{
+  position:absolute;
+  left:8px; right:8px;
+  bottom:6px;
+  height:8px;                 /* 原来6px -> 8px 更清楚 */
+  border-radius:999px;
+  opacity:1;
+  box-shadow: 0 0 0 1px rgba(40,20,80,.22); /* 细描边提对比 */
+}
 
+.tag.bleed{
+  background: var(--c);
+  background: color-mix(in srgb, var(--c) 70%, white 30%);
+}
+
+.tag.start{
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c) 88%, white 12%),
+    color-mix(in srgb, var(--c) 62%, white 38%)
+  );
+}
+
+.tag.fertile{
+  background: var(--d);
+  background: color-mix(in srgb, var(--d) 72%, white 28%);
+}
+
+.tag.ovul{
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--d) 88%, white 12%),
+    color-mix(in srgb, var(--d) 62%, white 38%)
+  );
+}
     .outline{ position:absolute; inset:4px; border-radius: 12px; border:2px solid transparent; pointer-events:none; }
     .outline.predict{
       border-color: color-mix(in srgb, var(--b) 70%, white 30%);
