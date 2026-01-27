@@ -281,7 +281,7 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>小月历 · 周期记录器</h1>
-            <div class="sub">只做“记录 + 计算”，不搞医疗判断（你放心）</div>
+            <div class="sub">只做“记录 + 计算”，以及和我一起关心小清</div>
           </div>
         </div>
         <div class="themePills" id="themePills" aria-label="主题">
@@ -329,7 +329,7 @@
           <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
 
           <div class="hint">
-            你不是数学倒退，你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活。^^
+            小乖你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活还有爱我^^
           </div>
         </div>
       </div>
@@ -341,7 +341,7 @@
           <div class="dot" aria-hidden="true" style="background:linear-gradient(135deg,var(--c),var(--a));"></div>
           <div>
             <h1>记录</h1>
-            <div class="sub">填开始/结束（结束可空着，等结束了再补）</div>
+            <div class="sub">填开始/结束（结束可空着，宝宝等结束了再补♡）</div>
           </div>
         </div>
         <div class="actions">
@@ -440,7 +440,7 @@
         <div class="row" style="margin-top:10px;">
           <div style="grid-column:1 / -1;">
             <div class="hint">
-              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它不保证任何事情，但能帮你快速对齐“27/28/29 天”这种计算。
+              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它能帮你快速对齐“27/28/29 天”这种计算。
             </div>
           </div>
         </div>
@@ -687,7 +687,7 @@
       const predS = pred ? new Date(pred.getTime() - win*86400000) : null;
       const predE = pred ? new Date(pred.getTime() + win*86400000) : null;
 
-      // 易孕/排卵：按平均周期粗算（仅作辅助提示，不作医疗判断）
+      // 易孕/排卵：按平均周期粗算
       let ovul = null, fertS = null, fertE = null;
       if(pred && st.avg){
         ovul = new Date(pred.getTime() - 14*86400000);
@@ -754,7 +754,7 @@
       const end = normalizeDateInput($("end").value);
       const note = ($("note").value || "").trim().slice(0,60);
 
-      if(!start){ toast("先填开始日期呀～","!"); return; }
+      if(!start){ toast("乖清清先填开始日期呀～","!"); return; }
       if(end){
         const a=toDate(start), b=toDate(end);
         if(daysBetween(a,b) < 0){ toast("结束日期不能早于开始日期。","!"); return; }
@@ -965,7 +965,7 @@
     function init(){
       applyTheme(state.theme || "lavender");
       rerenderAll();
-      toast("已准备好：先加一条“开始日期”就能算周期啦。","✦");
+      toast("已准备好：清清乖宝先加一条“开始日期”就能算周期啦。","✦");
     }
     init();
   
