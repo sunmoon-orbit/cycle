@@ -168,6 +168,9 @@
     .tag.bleed{ background: color-mix(in srgb, var(--c) 40%, white 60%); }
     .tag.start{ background: linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, white 25%), color-mix(in srgb, var(--a) 35%, white 65%)); }
     .tag.predict{ background: color-mix(in srgb, var(--b) 45%, white 55%); }
+    .tag.fertile{ background: color-mix(in srgb, var(--d) 40%, white 60%); }
+    .tag.ovul{ background: linear-gradient(135deg, color-mix(in srgb, var(--d) 75%, white 25%), color-mix(in srgb, var(--b) 35%, white 65%)); }
+
     .outline{ position:absolute; inset:4px; border-radius: 12px; border:2px solid transparent; pointer-events:none; }
     .outline.predict{
       border-color: color-mix(in srgb, var(--b) 70%, white 30%);
@@ -278,7 +281,7 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <h1>小月历 · 周期记录器</h1>
-            <div class="sub">只做“记录 + 计算还有替我关心你”</div>
+            <div class="sub">只做“记录 + 计算”，不搞医疗判断（你放心）</div>
           </div>
         </div>
         <div class="themePills" id="themePills" aria-label="主题">
@@ -307,7 +310,7 @@
           <div class="calGrid" id="calGrid" aria-label="日历"></div>
 
           <div class="hint" style="margin-top:10px;">
-            标记说明：<strong>粉色条</strong>＝记录到的经期天；<strong>渐变条</strong>＝开始日；<strong>蓝色框</strong>＝“按平均周期”预测的下次开始日（只是计算，不是保证）。
+            标记说明：<strong>粉色条</strong>＝经期天（未填结束会按历史平均/默认7天显示）；<strong>渐变条</strong>＝开始日；<strong>绿色条</strong>＝易孕窗口；<strong>绿蓝渐变条</strong>＝排卵日（按平均周期粗算）；<strong>蓝色框</strong>＝预测下次开始日（只是计算，不是保证）。
           </div>
         </div>
 
@@ -326,7 +329,7 @@
           <div class="kv"><div class="k">你已经记录了</div><div class="v" id="recCount">0</div></div>
 
           <div class="hint">
-            你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活和想我^^
+            你不是数学倒退，你只是被“焦虑+日期”联手欺负了。这个页面负责把差分和平均数做掉，剩下的你只管生活。^^
           </div>
         </div>
       </div>
@@ -338,7 +341,7 @@
           <div class="dot" aria-hidden="true" style="background:linear-gradient(135deg,var(--c),var(--a));"></div>
           <div>
             <h1>记录</h1>
-            <div class="sub">填开始/结束（提醒小鹿：结束可空着，等结束了再补）</div>
+            <div class="sub">填开始/结束（结束可空着，等结束了再补）</div>
           </div>
         </div>
         <div class="actions">
@@ -362,8 +365,8 @@
           </div>
           <div class="row">
             <div style="grid-column:1 / -1;">
-              <label for="note">备注（可选，比如“作息乱/考试周/出差/焦虑”）</label>
-              <input id="note" type="text" maxlength="60" placeholder="小乖可爱地记一下也行～" />
+              <label for="note">备注（可选，比如“作息乱/考试周/出差”）</label>
+              <input id="note" type="text" maxlength="60" placeholder="可爱地记一下也行～" />
             </div>
           </div>
           <div class="actions">
@@ -398,7 +401,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px;">
-          Ethan的小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。它会替我帮小鹿把“日期算术”做得不翻车。
+          小声明：这个网页不会上传任何数据，<strong>所有内容只存在你的设备里</strong>。它也不替代任何专业判断，只帮你把“日期算术”做得不翻车。
         </div>
       </div>
     </aside>
@@ -437,7 +440,7 @@
         <div class="row" style="margin-top:10px;">
           <div style="grid-column:1 / -1;">
             <div class="hint">
-              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。虽然它不保证任何事情，但能帮你快速对齐“27/28/29 天”这种计算。
+              这里的“预测”只是：<strong>下次开始日 ≈ 上次开始日 + 平均周期</strong>。它不保证任何事情，但能帮你快速对齐“27/28/29 天”这种计算。
             </div>
           </div>
         </div>
@@ -454,6 +457,7 @@
   <input type="file" id="file" accept="application/json" style="display:none;" />
 
   <script>
+
     const $ = (id) => document.getElementById(id);
     const clamp = (n,a,b)=>Math.min(b, Math.max(a,n));
     const pad2 = (n)=> String(n).padStart(2,"0");
@@ -665,9 +669,15 @@
       const totalCells = 42;
 
       const recs = state.records || [];
+      const st = stats();
+      // 未填写结束日期时：用历史平均经期长度（算不出来就默认 7 天）来做“显示用”的结束日
+      const avgBleed = clamp(parseInt(st.avgBleed ?? 7, 10), 4, 10);
+      const tdy = today();
       const ranges = recs.map(r=>{
         const s = toDate(r.start);
-        const e = r.end ? toDate(r.end) : toDate(r.start);
+        let e = r.end ? toDate(r.end) : new Date(s.getTime() + (avgBleed - 1) * 86400000);
+        // 只用于显示：不让“进行中”把未来都标满
+        if(e.getTime() > tdy.getTime()) e = tdy;
         return { s, e, start: r.start };
       });
 
@@ -676,6 +686,14 @@
       const pred = p ? p.date : null;
       const predS = pred ? new Date(pred.getTime() - win*86400000) : null;
       const predE = pred ? new Date(pred.getTime() + win*86400000) : null;
+
+      // 易孕/排卵：按平均周期粗算（仅作辅助提示，不作医疗判断）
+      let ovul = null, fertS = null, fertE = null;
+      if(pred && st.avg){
+        ovul = new Date(pred.getTime() - 14*86400000);
+        fertS = new Date(ovul.getTime() - 5*86400000);
+        fertE = new Date(ovul.getTime() + 1*86400000);
+      }
 
       for(let i=0;i<totalCells;i++){
         const dayNum = i - firstDow + 1;
@@ -699,12 +717,20 @@
         if(isBleed) tag.classList.add("bleed");
         if(isStart){ tag.classList.remove("bleed"); tag.classList.add("start"); }
 
+        let isFert=false, isOvul=false;
+        if(fertS && fertE && inRange(cellDate, fertS, fertE)) isFert=true;
+        if(ovul && isSameDate(cellDate, ovul)) isOvul=true;
+        if(!isBleed && !isStart){
+          if(isFert) tag.classList.add("fertile");
+          if(isOvul){ tag.classList.remove("fertile"); tag.classList.add("ovul"); }
+        }
+
         const outline = document.createElement("div"); outline.className="outline";
         if(pred && isSameDate(cellDate, pred)){
           outline.classList.add("predict");
-          if(!isBleed && !isStart) tag.classList.add("predict");
+          if(!isBleed && !isStart && !isFert && !isOvul) tag.classList.add("predict");
         }else if(predS && predE && inRange(cellDate, predS, predE)){
-          if(!isBleed && !isStart) tag.classList.add("predict");
+          if(!isBleed && !isStart && !isFert && !isOvul) tag.classList.add("predict");
         }
         if(isSameDate(cellDate, today())) outline.classList.add("today");
 
@@ -942,7 +968,8 @@
       toast("已准备好：先加一条“开始日期”就能算周期啦。","✦");
     }
     init();
-  </script>
+  
+</script>
 
   <!-- Service Worker -->
   <script>
