@@ -336,7 +336,7 @@
           <div class="calGrid" id="calGrid" aria-label="日历"></div>
 
           <div class="hint" style="margin-top:10px;">
-            标记说明：<strong>粉色条</strong>＝经期天（未填结束会按历史平均/默认7天显示）；<strong>渐变条</strong>＝开始日；<strong>绿色条</strong>＝易孕窗口；<strong>绿蓝渐变条</strong>＝排卵日（按平均周期粗算）；<strong>蓝色框</strong>＝预测下次开始日（只是计算，不是保证）。
+            标记说明：<strong>浅粉色条</strong>＝经期天（未填结束会按历史平均/默认7天显示）；<strong>灰渐变条</strong>＝开始日；<strong>淡绿色条</strong>＝易孕窗口；<strong>浅绿蓝渐变条</strong>＝排卵日（按平均周期粗算）；<strong>蓝色框</strong>＝预测下次开始日（只是计算，不是保证）。
           </div>
         </div>
 
@@ -427,7 +427,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px;">
-          Ethan小提醒：这个网页不会上传任何数据，<strong>所有内容只存在小乖的设备里☆</strong>
+          Ethan小提醒：这个网页不会上传任何数据，<strong>所有内容只存在清清小乖的设备里☆</strong>
         </div>
       </div>
     </aside>
@@ -783,7 +783,7 @@
       if(!start){ toast("乖清清先填开始日期呀～","!"); return; }
       if(end){
         const a=toDate(start), b=toDate(end);
-        if(daysBetween(a,b) < 0){ toast("结束日期不能早于开始日期。","!"); return; }
+        if(daysBetween(a,b) < 0){ toast("提醒小乖结束日期不能早于开始日期。","!"); return; }
       }
 
       const existed = (state.records||[]).some(r=>r.start === start && r.id !== state._editing);
@@ -893,7 +893,7 @@
       const today = todayKey();
       const openIdx = state.records.findIndex(r => !r.end);
       if(openIdx !== -1){
-        toast("你已经有一条未结束的记录啦～先结束它再开始新的一条。( ´ ▽ ` )ﾉ");
+        toast("你已经有一条未结束的记录啦～先结束它再开始新的一条。( ✧(◍˃̶ᗜ˂̶◍)✩");
         return;
       }
       state.records.unshift({ start: today, end: "", note: "" });
@@ -926,14 +926,14 @@
     $("btnFillToday").addEventListener("click", ()=>{ $("start").value = todayKey(); toast("开始日期已填今天。","✓"); });
     $("btnQuickStart").addEventListener("click", quickStartToday);
     $("btnQuickEnd").addEventListener("click", quickEndToday);
-    $("btnHelp").addEventListener("click", ()=> toast("小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来～","✦"));
+    $("btnHelp").addEventListener("click", ()=> toast("小技巧：结束日期可以空着，等结束了再补。平均周期需要至少 2 次开始日才算得出来( *ˊᵕˋ)","✦"));
 
     $("btnExport").addEventListener("click", exportJSON);
     $("btnImport").addEventListener("click", ()=> $("file").click());
     $("file").addEventListener("change", ()=>{
       const f = $("file").files && $("file").files[0];
       if(!f) return;
-      if(f.size > 2_000_000){ toast("文件有点大（>2MB），小鹿先确认是不是选错了。","!"); $("file").value=""; return; }
+      if(f.size > 2_000_000){ toast("文件有点大（>2MB），小鹿先确认是不是选错了","!"); $("file").value=""; return; }
       const rd = new FileReader();
       rd.onload = ()=> { importJSONText(String(rd.result || "")); $("file").value=""; };
       rd.readAsText(f, "utf-8");
