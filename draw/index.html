@@ -20,28 +20,7 @@
       --shadow:0 10px 28px rgba(0,0,0,.08);
       --r:22px;
     }
-  #customArea textarea{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px 12px;
-  background:rgba(255,255,255,.55);
-  color:var(--ink);
-  outline:none;
-  resize:vertical;
-}
-#customArea .row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-#customArea .hint{
-  color:var(--muted);
-  font-size:13px;
-  margin:8px 0;
-}
-    *{box-sizing:border-box}
+*{box-sizing:border-box}
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC","Noto Sans SC", Arial, sans-serif;
@@ -156,8 +135,49 @@
       .result{min-height:140px}
     }
     /* 隐藏自定义签筒区域（先不删，省得出事） */
-#customArea { display: none; }
-  </style>
+
+  
+  .history{
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(40,20,80,.12);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .history:empty{ display:none; }
+  .history .hrow{
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-top: 6px;
+  }
+  .history .t{ opacity:.85; font-variant-numeric: tabular-nums; }
+  .history .v{ flex:1; text-align:right; color: var(--ink); }
+
+
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(40,20,80,.12);
+    box-shadow: 0 10px 30px rgba(40,20,80,.12);
+    color: var(--ink);
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+</style>
 </head>
 
 <body>
@@ -178,26 +198,14 @@
           <button class="ghost" id="btnCopy">复制结果</button>
           
           <button class="ghost" id="btnClearLast">清空展示</button>
+          <button class="ghost" id="btnMode" title="切换：随机 / 不重复">模式：随机</button>
           <span class="pill" id="stat">签数：0</span>
         </div>
 
         <div class="result">
           <div class="big" id="resultText">点“抽一签”</div>
-          <section class="card" id="customArea">
-  <h2>自定义签筒</h2>
-  <p class="hint">每行一条签。会保存到本地（只在你的浏览器里）。</p>
-
-  <textarea id="customInput" rows="6" placeholder="例：\n喝口水\n伸伸懒腰\n看窗外两分钟"></textarea>
-
-  <div class="row">
-    <button id="btnSaveCustom" type="button">保存自定义签筒</button>
-    <button id="btnUseCustom" type="button">使用自定义签筒</button>
-    <button id="btnUseDefault" type="button">恢复默认签筒</button>
-  </div>
-
-  <p class="hint" id="customStatus">当前：默认签筒</p>
-          </section>
-          <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
+          <div class="history" id="history"></div>
+<div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
         </div>
 
         <div class="hint">
@@ -230,257 +238,314 @@
   </div>
 
   <script>
-    const LS_BAG = "sunmoon_draw_bag_v1";
-    const LS_NAME = "sunmoon_draw_name_v1";
-    const LS_LAST = "sunmoon_draw_last_v1";
+  const $ = (id) => document.getElementById(id);
+  const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
 
-    const defaultBag = [
-      "喝点水。",
-      "伸个懒腰，肩颈别硬扛。",
-      "把手机放下两分钟，看看窗外。",
-      "整理一个小角落，1分钟就行。",
-      "洗把脸，重启一下人类进程。",
-      "夸你自己一句，不许敷衍。",
-      "发呆30秒，合法合规。",
-      "给未来的你做一件小事。",
-      "今天只要不更糟，就是胜利。"
-    ];
+  const safeParse = (raw, fallback) => {
+    try { return JSON.parse(raw); } catch { return fallback; }
+  };
 
-    const $ = (id) => document.getElementById(id);
+  const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+
+  const shuffle = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  const hashStr = (s) => {
+    // djb2
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+    return (h >>> 0).toString(16);
+  };
+
+  // storage keys (keep existing bag/name/last keys)
+  const LS_BAG = "sunmoon_draw_bag_v1";
+  const LS_NAME = "sunmoon_draw_name_v1";
+  const LS_LAST = "sunmoon_draw_last_v1";
+  const LS_MODE = "sunmoon_draw_mode_v1";      // "random" | "norepeat"
+  const LS_QUEUE = "sunmoon_draw_queue_v1";    // { hash, items: [] }
+  const LS_HISTORY = "sunmoon_draw_hist_v1";   // [{text, at}]
+
+  const defaultName = "日月签筒";
+  const defaultBag = [
+    "喝水",
+    "伸懒腰",
+    "看窗外两分钟",
+    "把手机放下 30 秒",
+    "收拾桌面 1 分钟",
+    "深呼吸 5 次",
+    "夸自己一句",
+    "去走两步",
+    "早一点睡"
+  ];
+
+  const getName = () => (localStorage.getItem(LS_NAME) || defaultName).trim() || defaultName;
+
+  const normalizeLines = (text) => {
+    return String(text || "")
+      .split(/
+?
+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
+
+  const getBag = () => {
+    const raw = localStorage.getItem(LS_BAG);
+    const lines = normalizeLines(raw || "");
+    return lines.length ? lines : defaultBag.slice();
+  };
+
+  const setBag = (lines, name) => {
+    localStorage.setItem(LS_BAG, lines.join("
+"));
+    localStorage.setItem(LS_NAME, (name || "").trim());
+    // bag changed → reset queue (if in norepeat)
+    rebuildQueue();
+    updateUI();
+  };
+
+  const setDefaultBag = () => {
+    localStorage.setItem(LS_BAG, defaultBag.join("
+"));
+    localStorage.setItem(LS_NAME, defaultName);
+    rebuildQueue(true);
+    updateUI();
+  };
+
+  const getMode = () => localStorage.getItem(LS_MODE) || "random";
+  const setMode = (mode) => {
+    localStorage.setItem(LS_MODE, mode);
+    rebuildQueue(true);
+    updateUI();
+  };
+
+  const toggleMode = () => setMode(getMode() === "norepeat" ? "random" : "norepeat");
+
+  const getQueueObj = () => safeParse(localStorage.getItem(LS_QUEUE), null);
+
+  const rebuildQueue = (force = false) => {
+    if (getMode() !== "norepeat") {
+      localStorage.removeItem(LS_QUEUE);
+      return;
+    }
+    const bag = getBag();
+    const h = hashStr(bag.join("
+"));
+    const q = getQueueObj();
+    if (force || !q || q.hash !== h || !Array.isArray(q.items)) {
+      localStorage.setItem(LS_QUEUE, JSON.stringify({ hash: h, items: shuffle(bag.slice()) }));
+    }
+  };
+
+  const pullOneFromQueue = () => {
+    rebuildQueue(false);
+    const bag = getBag();
+    const h = hashStr(bag.join("
+"));
+    let q = getQueueObj();
+    if (!q || q.hash !== h || !Array.isArray(q.items)) {
+      q = { hash: h, items: shuffle(bag.slice()) };
+    }
+    if (!q.items.length) {
+      // new cycle
+      q.items = shuffle(bag.slice());
+    }
+    const pick = q.items.shift();
+    localStorage.setItem(LS_QUEUE, JSON.stringify(q));
+    return { pick, remain: q.items.length, total: bag.length };
+  };
+
+  const saveLast = (text) => {
+    localStorage.setItem(LS_LAST, JSON.stringify({ text, at: Date.now() }));
+  };
+
+  const loadLast = () => safeParse(localStorage.getItem(LS_LAST), null);
+
+  const addHistory = (text) => {
+    const hist = safeParse(localStorage.getItem(LS_HISTORY), []);
+    hist.unshift({ text, at: Date.now() });
+    hist.length = Math.min(hist.length, 6);
+    localStorage.setItem(LS_HISTORY, JSON.stringify(hist));
+  };
+
+  const loadHistory = () => safeParse(localStorage.getItem(LS_HISTORY), []);
+
+  const fmtTime = (ts) => {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+
+  const updateStat = () => {
+    const stat = $("stat");
+    if (!stat) return;
+
+    const bag = getBag();
+    if (getMode() !== "norepeat") {
+      stat.textContent = `签数：${bag.length}`;
+      return;
+    }
+
+    const q = getQueueObj();
+    const h = hashStr(bag.join("
+"));
+    const remain = (q && q.hash === h && Array.isArray(q.items)) ? q.items.length : bag.length;
+    stat.textContent = `剩余：${remain}/${bag.length}`;
+  };
+
+  const renderHistory = () => {
+    const el = $("history");
+    if (!el) return;
+    const hist = loadHistory();
+    if (!hist.length) { el.innerHTML = ""; return; }
+
+    const rows = hist.slice(0, 5).map(item => {
+      const t = fmtTime(item.at);
+      return `<div class="hrow"><span class="t">${escapeHTML(t)}</span><span class="v">${escapeHTML(item.text)}</span></div>`;
+    });
+    el.innerHTML = rows.join("");
+  };
+
+  const updateModeUI = () => {
+    const btn = $("btnMode");
+    if (!btn) return;
+    btn.textContent = (getMode() === "norepeat") ? "模式：不重复" : "模式：随机";
+  };
+
+  const updateUI = () => {
+    // header name
     const bagName = $("bagName");
+    if (bagName) bagName.textContent = getName();
+
+    // editor fields
     const bagTitle = $("bagTitle");
     const bagInput = $("bagInput");
-    const stat = $("stat");
-    const resultText = $("resultText");
-    const resultMeta = $("resultMeta");
-    const saveTip = $("saveTip");
+    if (bagTitle) bagTitle.value = getName();
+    if (bagInput) bagInput.value = getBag().join("
+");
 
-    function safeParse(raw, fallback){
-      try { return JSON.parse(raw); } catch { return fallback; }
+    // mode/stat/history
+    updateModeUI();
+    updateStat();
+    renderHistory();
+
+    // last result
+    const last = loadLast();
+    if (last && last.text) {
+      const rt = $("resultText");
+      const rm = $("resultMeta");
+      if (rt) rt.textContent = last.text;
+      if (rm) rm.textContent = `上次：${fmtTime(last.at)}`;
     }
-function getBag(){
-  const raw = localStorage.getItem(LS_BAG);
+  };
 
-  // 第一次：没有任何保存，就写入默认签筒
-  if(!raw){
-    const d = defaultBag.slice();
-    localStorage.setItem(LS_BAG, JSON.stringify(d));
-    return d;
-  }
+  const drawOne = () => {
+    const mode = getMode();
+    let pick, remain, total;
 
-  const bag = safeParse(raw, null);
-
-  // 保存坏了 / 为空：修复为默认签筒，并重新写回本地
-  if(!Array.isArray(bag) || bag.length === 0){
-    const d = defaultBag.slice();
-    localStorage.setItem(LS_BAG, JSON.stringify(d));
-    return d;
-  }
-
-  return bag;
-}
-   
-
-    function getName(){
-      return localStorage.getItem(LS_NAME) || "默认签筒";
-    }
-
-    function render(){
+    if (mode === "norepeat") {
+      const out = pullOneFromQueue();
+      pick = out.pick;
+      remain = out.remain;
+      total = out.total;
+    } else {
       const bag = getBag();
-      const name = getName();
-
-      bagName.textContent = name;
-      bagTitle.value = (name === "默认签筒") ? "" : name;
-      bagInput.value = bag.join("\n");
-
-      stat.textContent = `签数：${bag.length}`;
-
-      const last = localStorage.getItem(LS_LAST);
-      if (last){
-        resultText.textContent = last;
-        resultMeta.textContent = "上次抽到的是它。想换就再抽一签。";
-      }
+      pick = bag[Math.floor(Math.random() * bag.length)];
     }
 
-    function saveBag(){
-      const lines = bagInput.value
-        .split("\n")
-        .map(s => s.trim())
-        .filter(Boolean);
+    const rt = $("resultText");
+    const rm = $("resultMeta");
+    if (rt) rt.textContent = pick;
+    if (rm) rm.textContent = `抽到时间：${fmtTime(Date.now())}`;
 
-      const bag = lines.length ? lines : defaultBag.slice();
-      const name = (bagTitle.value || "").trim() || "默认签筒";
+    saveLast(pick);
+    addHistory(pick);
 
-      try {
-  localStorage.setItem(LS_BAG, JSON.stringify(bag));
-  localStorage.setItem(LS_NAME, name);
+    updateStat();
+    renderHistory();
 
-  const check = localStorage.getItem(LS_BAG);
-  if (!check) throw new Error("LS_BAG write failed");
-} catch (e) {
-  saveTip.textContent = "保存失败：浏览器阻止本地存储/被清空了";
-  console.error(e);
-  return;
-      }
-
-      bagName.textContent = name;
-      stat.textContent = `签数：${bag.length}`;
-      saveTip.textContent = "保存成功。去抽吧。";
-      resultMeta.textContent = "签筒已保存，本地生效。";
+    // tiny pop animation
+    if (rt) {
+      rt.animate([{ transform: "translateY(2px)", opacity: 0.6 }, { transform: "translateY(0)", opacity: 1 }], { duration: 160, easing: "ease-out" });
     }
+  };
 
-    function resetBag(){
-      localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
-      localStorage.setItem(LS_NAME, "默认签筒");
-      saveTip.textContent = "已恢复默认签。";
-      render();
+  const copyResult = async () => {
+    const rt = $("resultText");
+    if (!rt) return;
+    const text = rt.textContent.trim();
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("已复制到剪贴板");
+    } catch {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); toast("已复制到剪贴板"); } catch { toast("复制失败，可手动选中复制"); }
+      ta.remove();
     }
-// ===== 自定义签筒（本地保存）=====
-const LS_CUSTOM_POOL = "sunmoon_custom_pool_v1";
-const LS_POOL_MODE = "sunmoon_pool_mode_v1"; // "default" | "custom"
+  };
 
-function parseLines(text){
-  return text
-    .split("\n")
-    .map(s => s.trim())
-    .filter(Boolean);
-}
+  const clearResult = () => {
+    const rt = $("resultText");
+    const rm = $("resultMeta");
+    if (rt) rt.textContent = "点“抽一签”";
+    if (rm) rm.textContent = "";
+    toast("已清空展示");
+  };
 
-function loadCustomPool(){
-  try{
-    const raw = localStorage.getItem(LS_CUSTOM_POOL) || "";
-    return parseLines(raw);
-  }catch(e){
-    return [];
-  }
-}
+  const toast = (msg) => {
+    const t = $("toast");
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1500);
+  };
 
-function saveCustomPool(lines){
-  localStorage.setItem(LS_CUSTOM_POOL, lines.join("\n"));
-}
-
-function setPoolMode(mode){
-  localStorage.setItem(LS_POOL_MODE, mode);
-  const status = document.getElementById("customStatus");
-  if(status) status.textContent = "当前：" + (mode === "custom" ? "自定义签筒" : "默认签筒");
-}
-
-// 你原本的签池变量，假设叫 defaultBag / pool / items 之类
-// 这里需要你把“当前使用的签池”切换掉。
-// 我先做成：currentPool 指向你抽签时用的数组。
-let currentPool = null;
-
-// 这段你要对齐你的原代码：把“抽签用的数组”改成 currentPool
-function initPoolBridge(){
-  // 1) 找到你原来默认签池数组（比如 defaultBag 或 defaultPool）
-  // 2) 让 currentPool = defaultPool
-  // 3) 抽签函数用 currentPool
-  //
-  // 因为我没看到你具体变量名，所以我在这里做“最少侵入式”处理：
-  // 如果你原来就有一个全局数组叫 defaultBag，就用它。
-  if(typeof defaultBag !== "undefined"){
-    currentPool = defaultBag.slice();
-  }else if(typeof defaultPool !== "undefined"){
-    currentPool = defaultPool.slice();
-  }else if(typeof pool !== "undefined"){
-    currentPool = pool.slice();
-  }
-}
-
-function applyPoolMode(){
-  const input = document.getElementById("customInput");
-  const mode = localStorage.getItem(LS_POOL_MODE) || "default";
-  const custom = loadCustomPool();
-
-  if(input){
-    input.value = custom.join("\n");
-  }
-
-  if(mode === "custom" && custom.length > 0){
-    currentPool = custom.slice();
-    setPoolMode("custom");
-  }else{
-    // 回默认
-    initPoolBridge();
-    setPoolMode("default");
-  }
-}
-
-// 绑定按钮
-function bindCustomUI(){
-  const input = document.getElementById("customInput");
-  const btnSave = document.getElementById("btnSaveCustom");
-  const btnUse = document.getElementById("btnUseCustom");
-  const btnDef = document.getElementById("btnUseDefault");
-
-  if(btnSave){
-    btnSave.addEventListener("click", () => {
-      const lines = parseLines(input ? input.value : "");
-      saveCustomPool(lines);
-      document.getElementById("customStatus").textContent =
-        "已保存：" + lines.length + " 条（当前不一定在使用）";
-    });
-  }
-
-  if(btnUse){
-    btnUse.addEventListener("click", () => {
-      const lines = loadCustomPool();
-      if(lines.length === 0){
-        document.getElementById("customStatus").textContent = "你的自定义签筒是空的😑";
-        return;
-      }
-      currentPool = lines.slice();
-      setPoolMode("custom");
-    });
-  }
-
-  if(btnDef){
-    btnDef.addEventListener("click", () => {
-      initPoolBridge();
-      setPoolMode("default");
-    });
-  }
-}
-
-// 页面启动
-initPoolBridge();
-bindCustomUI();
-applyPoolMode();
-
-    function drawOne(){
-      const bag = getBag();
-      const pick = bag[Math.floor(Math.random() * bag.length)];
-      resultText.textContent = pick;
-      resultMeta.textContent = "抽到就算数。反悔也行，但要对自己好一点。";
-      localStorage.setItem(LS_LAST, pick);
+  const saveFromEditor = () => {
+    const bagTitle = $("bagTitle");
+    const bagInput = $("bagInput");
+    const name = bagTitle ? bagTitle.value : "";
+    const lines = normalizeLines(bagInput ? bagInput.value : "");
+    if (!lines.length) {
+      toast("签筒不能为空（至少一行）");
+      return;
     }
+    setBag(lines, name);
+    toast("已保存签筒");
+    const tip = $("saveTip");
+    if (tip) tip.style.display = "inline-block";
+    setTimeout(() => { if (tip) tip.style.display = "none"; }, 1400);
+  };
 
-    async function copyResult(){
-      const text = (resultText.textContent || "").trim();
-      if (!text || text === "点“抽一签”") return;
-      try{
-        await navigator.clipboard.writeText(text);
-        resultMeta.textContent = "复制好了。去执行。";
-      }catch{
-        resultMeta.textContent = "复制失败。长按也能复制。";
-      }
-    }
+  // bind events
+  on("btnDraw", "click", drawOne);
+  on("btnCopy", "click", copyResult);
+  on("btnClearLast", "click", clearResult);
+  on("btnSave", "click", saveFromEditor);
+  on("btnReset", "click", () => { setDefaultBag(); toast("已恢复默认签"); });
+  on("btnMode", "click", () => { toggleMode(); toast(getMode() === "norepeat" ? "已切换：不重复" : "已切换：随机"); });
 
-    function clearLast(){
-      localStorage.removeItem(LS_LAST);
-      resultText.textContent = "点“抽一签”";
-      resultMeta.textContent = "清空展示了。";
-    }
-
-    $("btnDraw").addEventListener("click", drawOne);
-    $("btnCopy").addEventListener("click", copyResult);
-    $("btnClearLast").addEventListener("click", clearLast);
-    $("btnSave").addEventListener("click", saveBag);
-    $("btnReset").addEventListener("click", resetBag);
-$("btnSaveCustom").addEventListener("click", saveCustomBag);
-$("btnUseCustom").addEventListener("click", () => { setPoolMode("custom"); render(); });
-$("btnUseDefault").addEventListener("click", () => { setPoolMode("default"); render(); });
-    render();
-  </script>
+  // init
+  updateUI();
+</script>
+  <div class="toast" id="toast" aria-live="polite"></div>
 </body>
 </html>
