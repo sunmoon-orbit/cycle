@@ -105,7 +105,19 @@
       box-shadow: 0 16px 34px rgba(167,139,250,.22);
     }
     button.ghost{ background: transparent; box-shadow:none; }
-    button.danger{ background: rgba(252,165,165,.18); border: 1px solid rgba(252,165,165,.28); box-shadow:none; }
+    /* danger/强调色：跟随主题色（用 --c 做柔和强调） */
+button.danger{
+  /* fallback：少数老浏览器不支持 color-mix 时也至少有颜色 */
+  background: rgba(252,165,165,.18);
+  border: 1px solid rgba(252,165,165,.28);
+  box-shadow: none;
+
+  /* theme-aware */
+  background: color-mix(in srgb, var(--c) 18%, white 82%);
+  border-color: color-mix(in srgb, var(--c) 38%, white 62%);
+  color: var(--ink);
+}
+button.danger:hover{ filter: brightness(.98) saturate(1.03); }
 
     .grid{ display:grid; grid-template-columns: 1fr; gap:12px; }
     .pillRow{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
