@@ -164,6 +164,23 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     tr td:last-child{ border-radius: 0 14px 14px 0; }
 
     .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    /* 表格右侧“编辑/删”按钮：跟随主题色，增强对比度 */
+.actions button{
+  background: color-mix(in srgb, var(--a) 16%, white 84%);
+  border-color: color-mix(in srgb, var(--a) 45%, white 55%);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.actions button:hover{
+  filter: brightness(.98) saturate(1.06);
+}
+
+/* “删”再更强调一点（仍然跟主题色走） */
+.actions button.danger{
+  background: color-mix(in srgb, var(--a) 24%, white 76%);
+  border-color: color-mix(in srgb, var(--a) 65%, white 35%);
+}
 
     .calTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .calGrid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-top:10px; }
