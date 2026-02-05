@@ -289,8 +289,7 @@
 
   const normalizeLines = (text) => {
     return String(text || "")
-      .split(/
-?
+      .split(/?
 /)
       .map(s => s.trim())
       .filter(Boolean);
