@@ -289,8 +289,7 @@
 
   const normalizeLines = (text) => {
     return String(text || "")
-      .split(/?
-/)
+      .split(/\r?\n/)
       .map(s => s.trim())
       .filter(Boolean);
   };
@@ -302,8 +301,7 @@
   };
 
   const setBag = (lines, name) => {
-    localStorage.setItem(LS_BAG, lines.join("
-"));
+    localStorage.setItem(LS_BAG, lines.join("\n"));
     localStorage.setItem(LS_NAME, (name || "").trim());
     // bag changed → reset queue (if in norepeat)
     rebuildQueue();
@@ -311,8 +309,7 @@
   };
 
   const setDefaultBag = () => {
-    localStorage.setItem(LS_BAG, defaultBag.join("
-"));
+    localStorage.setItem(LS_BAG, defaultBag.join("\n"));
     localStorage.setItem(LS_NAME, defaultName);
     rebuildQueue(true);
     updateUI();
@@ -335,8 +332,7 @@
       return;
     }
     const bag = getBag();
-    const h = hashStr(bag.join("
-"));
+    const h = hashStr(bag.join("\n"));
     const q = getQueueObj();
     if (force || !q || q.hash !== h || !Array.isArray(q.items)) {
       localStorage.setItem(LS_QUEUE, JSON.stringify({ hash: h, items: shuffle(bag.slice()) }));
@@ -346,8 +342,7 @@
   const pullOneFromQueue = () => {
     rebuildQueue(false);
     const bag = getBag();
-    const h = hashStr(bag.join("
-"));
+    const h = hashStr(bag.join("\n"));
     let q = getQueueObj();
     if (!q || q.hash !== h || !Array.isArray(q.items)) {
       q = { hash: h, items: shuffle(bag.slice()) };
@@ -396,8 +391,7 @@
     }
 
     const q = getQueueObj();
-    const h = hashStr(bag.join("
-"));
+    const h = hashStr(bag.join("\n"));
     const remain = (q && q.hash === h && Array.isArray(q.items)) ? q.items.length : bag.length;
     stat.textContent = `剩余：${remain}/${bag.length}`;
   };
@@ -430,8 +424,7 @@
     const bagTitle = $("bagTitle");
     const bagInput = $("bagInput");
     if (bagTitle) bagTitle.value = getName();
-    if (bagInput) bagInput.value = getBag().join("
-");
+    if (bagInput) bagInput.value = getBag().join("\n");
 
     // mode/stat/history
     updateModeUI();
