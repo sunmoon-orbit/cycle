@@ -584,11 +584,7 @@ const drawBatch = (n) => {
       if (rm) rm.textContent = `进度：${i}/${n}`;
       if (i < n) requestAnimationFrame(step);
       else finish("");
-    };
-
-    requestAnimationFrame(step);
-  };
-
+};
   requestAnimationFrame(step);
 };
 
