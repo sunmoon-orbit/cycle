@@ -209,6 +209,7 @@
         <div class="result">
           <div class="big" id="resultText">点“抽一签”</div>
           <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
+      <div class="small" id="batchSummary" style="display:none"></div>
         </div>
 
         <div class="hint">
@@ -518,66 +519,74 @@ const showBatchSummary = (summaryText) => {
 };
 
 const drawBatch = (n) => {
-  if (__batchRunning) {
-    __batchRunning = false;
-    toast("已停止批量抽取");
-    return;
-  }
-
-  const bag = getBag();
-  if (!bag.length) { toast("签筒为空"); return; }
-
-  __batchRunning = true;
-  showBatchSummary("");
-  const rt = $("resultText");
-  const rm = $("resultMeta");
-  if (rt) rt.textContent = `正在抽取…（${n}次）`;
-
-  const counts = new Map();
-  const started = Date.now();
-  let i = 0;
-  const chunk = 200;
-
-  const step = () => {
-    if (!__batchRunning) return;
-
-    const end = Math.min(i + chunk, n);
-    for (; i < end; i++) {
-      const out = drawPick();
-      const pick = out.pick;
-      counts.set(pick, (counts.get(pick) || 0) + 1);
-      // keep norepeat queue persistent by writing LS_QUEUE in pullOneFromQueue()
-    }
-
-    if (rm) rm.textContent = `进度：${i}/${n}`;
-
-    if (i < n) {
-      requestAnimationFrame(step);
+    if (__batchRunning) return;
+    const bag = getBag();
+    if (!bag.length) {
+      toast("签筒为空：先在下方写好，再点「保存签筒」");
       return;
     }
+    __batchRunning = true;
 
-    __batchRunning = false;
-    const duration = Date.now() - started;
+    const started = Date.now();
+    const counts = new Map();
+    const seq = [];
 
-    // sort by count desc
-    const sorted = Array.from(counts.entries()).sort((a,b) => b[1]-a[1]);
-    const top = sorted.slice(0, 12).map(([k,v], idx) => `${String(idx+1).padStart(2," ")}. ${k} × ${v}`).join("\n");
-    const uniq = counts.size;
+    const rt = $("#resultText");
+    const rm = $("#resultMeta");
+    if (rm) rm.textContent = `进度：0/${n}`;
 
-    const modeName = (getMode() === "norepeat") ? "不重复" : "随机";
-    const summary = `批量抽取：${n} 次（模式：${modeName}）\n总签：${bag.length}  不同结果：${uniq}\n耗时：${duration} ms\n\nTop：\n${top}`;
+    const finish = (reason) => {
+      __batchRunning = false;
+      const done = seq.length;
+      const duration = Date.now() - started;
 
-    if (rt) rt.textContent = `批量完成：${n} 次`;
-    if (rm) rm.textContent = `完成时间：${fmtTime(Date.now())}`;
-    showBatchSummary(summary);
+      const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+      const top = sorted
+        .slice(0, 12)
+        .map(([k, v], i) => `${i + 1}. ${k} × ${v}`)
+        .join("\n");
 
-    // save last and history as a short mark
-    saveLast(`批量完成：${n}次`);
-    addHistory(`批量：${n}次`);
-    updateStat();
-    renderHistory();
+      const summary = [
+        `批量完成：${done} 次（目标：${n}）`,
+        reason ? `原因：${reason}` : "",
+        `完成时间：${fmtTime(Date.now())}`,
+        `耗时：${duration} ms`,
+        top ? `Top：\n${top}` : ""
+      ].filter(Boolean).join("\n");
 
-    toast("批量抽取完成");
+      showBatchSummary(summary);
+
+      if (rt) {
+        if (!done) {
+          rt.textContent = "（没有抽到结果）";
+        } else if (done <= 50) {
+          rt.textContent = seq.map((t, i) => `${i + 1}. ${t}`).join("\n");
+        } else {
+          const previewN = 30;
+          const preview = seq.slice(0, previewN).map((t, i) => `${i + 1}. ${t}`).join("\n");
+          rt.textContent = preview + `\n…（共 ${done} 条，已省略 ${done - previewN} 条）`;
+        }
+      }
+      if (rm) rm.textContent = `批量完成：${done} 次 · ${fmtTime(Date.now())}`;
+    };
+
+    let i = 0;
+    const step = () => {
+      i++;
+      const r = pick(bag);
+      if (!r) {
+        finish("签筒已抽完（不重复模式下会这样）");
+        return;
+      }
+      seq.push(r);
+      counts.set(r, (counts.get(r) || 0) + 1);
+
+      if (rm) rm.textContent = `进度：${i}/${n}`;
+      if (i < n) requestAnimationFrame(step);
+      else finish("");
+    };
+
+    requestAnimationFrame(step);
   };
 
   requestAnimationFrame(step);
