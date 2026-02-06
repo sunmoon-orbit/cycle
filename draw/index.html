@@ -566,9 +566,7 @@ const drawBatch = (n) => {
     if (!rt) return;
     const main = rt.textContent.trim();
     const summary = (bs && bs.textContent) ? bs.textContent.trim() : "";
-    const text = summary ? (main ? (main + "
-
-" + summary) : summary) : main;
+    const text = summary ? (main ? (main + "\n\n" + summary) : summary) : main;
     if (!text) return;
 
     try {
