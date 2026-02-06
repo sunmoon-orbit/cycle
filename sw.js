@@ -1,16 +1,10 @@
 /* PWA Service Worker - cute_cycle_tracker */
-const CACHE_NAME = "cute-cycle-cache-20260205190000"; // ✅ 改个新名字，强制更新
+const CACHE_NAME = "cute-cycle-cache-2026020601"; // ✅改一个新名字，强制更新
 const PRECACHE_URLS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-
-  // ✅ 把 draw 也加入预缓存（离线/回退更稳）
-  "./draw/",
-  "./draw/index.html",
-  "./draw/manifest.webmanifest",
-
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -19,8 +13,7 @@ const PRECACHE_URLS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
+    caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
       .then(() => self.skipWaiting())
   );
@@ -32,7 +25,7 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys.map((k) =>
-          k.startsWith("cute-cycle-cache-") && k !== CACHE_NAME
+          (k.startsWith("cute-cycle-cache-") && k !== CACHE_NAME)
             ? caches.delete(k)
             : Promise.resolve()
         )
@@ -53,26 +46,18 @@ self.addEventListener("fetch", (event) => {
   // Only handle same-origin
   if (url.origin !== self.location.origin) return;
 
+  // ✅ Navigation: network-first, fallback to cache (but cache by *request*, not "./index.html")
   if (isNav(req)) {
-    // ✅ Navigation: network-first, cache per-page, fallback per-path
     event.respondWith(
       (async () => {
-        const cache = await caches.open(CACHE_NAME);
         try {
           const fresh = await fetch(req);
-          // ✅ 关键修复：不要写进 ./index.html，改为“这个请求自己缓存自己”
-          cache.put(req, fresh.clone());
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(req, fresh.clone());     // ✅关键：按当前页面 URL 缓存，防止串台
           return fresh;
         } catch (e) {
-          // ✅ 优先：返回“当前页面”的缓存
-          const cachedPage = await caches.match(req);
-          if (cachedPage) return cachedPage;
-
-          // ✅ 再按路径回退
-          if (url.pathname.startsWith("/cycle/draw/")) {
-            return (await caches.match("./draw/index.html")) || (await caches.match("./index.html")) || (await caches.match("./"));
-          }
-          return (await caches.match("./index.html")) || (await caches.match("./"));
+          const cached = await caches.match(req);  // ✅关键：按当前页面 URL 取缓存
+          return cached || (await caches.match("./index.html")) || (await caches.match("./"));
         }
       })()
     );
