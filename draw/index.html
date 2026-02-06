@@ -195,17 +195,20 @@
       <div class="card">
         <div class="row">
           <button class="primary" id="btnDraw">抽一签</button>
-          <button class="ghost" id="btnCopy">复制结果</button>
+                    <button class="ghost" id="btnDraw10">抽10</button>
+          <button class="ghost" id="btnDraw100">抽100</button>
+          <button class="ghost" id="btnDraw1000">抽1000</button>
+<button class="ghost" id="btnCopy">复制结果</button>
           
-          <button class="ghost" id="btnClearLast">清空展示</button>
+                    <button class="ghost" id="btnClearHist">清空历史</button>
+<button class="ghost" id="btnClearLast">清空展示</button>
           <button class="ghost" id="btnMode" title="切换：随机 / 不重复">模式：随机</button>
           <span class="pill" id="stat">签数：0</span>
         </div>
 
         <div class="result">
           <div class="big" id="resultText">点“抽一签”</div>
-          <div class="history" id="history"></div>
-<div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
+          <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
         </div>
 
         <div class="hint">
@@ -231,6 +234,8 @@
 
         <div class="row" style="margin-top:10px">
           <button class="primary" id="btnSave">保存签筒</button>
+          <button class="ghost" id="btnExport">导出</button>
+          <button class="ghost" id="btnImport">导入</button>
           <span class="pill" id="saveTip">保存后下次打开还在</span>
         </div>
       </div>
@@ -275,6 +280,10 @@
   const defaultName = "日月签筒";
   const defaultBag = [
     "喝水",
+    "眨眨眼，放松一下",
+    "对小清说：我很棒",
+    "小清，喝口水",
+    "给小清一个拥抱",
     "伸懒腰",
     "看窗外两分钟",
     "把手机放下 30 秒",
@@ -282,7 +291,7 @@
     "深呼吸 5 次",
     "夸自己一句",
     "去走两步",
-    "早一点睡"
+    "早一点睡",
   ];
 
   const getName = () => (localStorage.getItem(LS_NAME) || defaultName).trim() || defaultName;
@@ -365,7 +374,7 @@
   const addHistory = (text) => {
     const hist = safeParse(localStorage.getItem(LS_HISTORY), []);
     hist.unshift({ text, at: Date.now() });
-    hist.length = Math.min(hist.length, 6);
+    hist.length = Math.min(hist.length, 10);
     localStorage.setItem(LS_HISTORY, JSON.stringify(hist));
   };
 
@@ -442,18 +451,9 @@
   };
 
   const drawOne = () => {
-    const mode = getMode();
-    let pick, remain, total;
-
-    if (mode === "norepeat") {
-      const out = pullOneFromQueue();
-      pick = out.pick;
-      remain = out.remain;
-      total = out.total;
-    } else {
-      const bag = getBag();
-      pick = bag[Math.floor(Math.random() * bag.length)];
-    }
+    showBatchSummary("");
+    const out = drawPick();
+    const pick = out.pick;
 
     const rt = $("resultText");
     const rm = $("resultMeta");
@@ -472,10 +472,103 @@
     }
   };
 
+
+let __batchRunning = false;
+
+const clearHistory = () => {
+  localStorage.removeItem(LS_HISTORY);
+  renderHistory();
+  toast("已清空历史");
+};
+
+const drawPick = () => {
+  const mode = getMode();
+  if (mode === "norepeat") return pullOneFromQueue();
+  const bag = getBag();
+  return { pick: bag[Math.floor(Math.random() * bag.length)], remain: null, total: bag.length };
+};
+
+const showBatchSummary = (summaryText) => {
+  const bs = $("batchSummary");
+  if (bs) bs.textContent = summaryText || "";
+};
+
+const drawBatch = (n) => {
+  if (__batchRunning) {
+    __batchRunning = false;
+    toast("已停止批量抽取");
+    return;
+  }
+
+  const bag = getBag();
+  if (!bag.length) { toast("签筒为空"); return; }
+
+  __batchRunning = true;
+  showBatchSummary("");
+  const rt = $("resultText");
+  const rm = $("resultMeta");
+  if (rt) rt.textContent = `正在抽取…（${n}次）`;
+
+  const counts = new Map();
+  const started = Date.now();
+  let i = 0;
+  const chunk = 200;
+
+  const step = () => {
+    if (!__batchRunning) return;
+
+    const end = Math.min(i + chunk, n);
+    for (; i < end; i++) {
+      const out = drawPick();
+      const pick = out.pick;
+      counts.set(pick, (counts.get(pick) || 0) + 1);
+      // keep norepeat queue persistent by writing LS_QUEUE in pullOneFromQueue()
+    }
+
+    if (rm) rm.textContent = `进度：${i}/${n}`;
+
+    if (i < n) {
+      requestAnimationFrame(step);
+      return;
+    }
+
+    __batchRunning = false;
+    const duration = Date.now() - started;
+
+    // sort by count desc
+    const sorted = Array.from(counts.entries()).sort((a,b) => b[1]-a[1]);
+    const top = sorted.slice(0, 12).map(([k,v], idx) => `${String(idx+1).padStart(2," ")}. ${k} × ${v}`).join("\n");
+    const uniq = counts.size;
+
+    const modeName = (getMode() === "norepeat") ? "不重复" : "随机";
+    const summary = `批量抽取：${n} 次（模式：${modeName}）\n总签：${bag.length}  不同结果：${uniq}\n耗时：${duration} ms\n\nTop：\n${top}`;
+
+    if (rt) rt.textContent = `批量完成：${n} 次`;
+    if (rm) rm.textContent = `完成时间：${fmtTime(Date.now())}`;
+    showBatchSummary(summary);
+
+    // save last and history as a short mark
+    saveLast(`批量完成：${n}次`);
+    addHistory(`批量：${n}次`);
+    updateStat();
+    renderHistory();
+
+    toast("批量抽取完成");
+  };
+
+  requestAnimationFrame(step);
+};
+
+
   const copyResult = async () => {
     const rt = $("resultText");
+    const bs = $("batchSummary");
     if (!rt) return;
-    const text = rt.textContent.trim();
+    const main = rt.textContent.trim();
+    const summary = (bs && bs.textContent) ? bs.textContent.trim() : "";
+    const text = summary ? (main ? (main + "
+
+" + summary) : summary) : main;
     if (!text) return;
 
     try {
@@ -498,6 +591,7 @@
     const rt = $("resultText");
     const rm = $("resultMeta");
     if (rt) rt.textContent = "点“抽一签”";
+    showBatchSummary("");
     if (rm) rm.textContent = "";
     toast("已清空展示");
   };
@@ -510,6 +604,47 @@
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1500);
   };
+
+
+const exportBag = async () => {
+  const name = getName();
+  const bag = getBag();
+  const payload = JSON.stringify({ name, bag, at: Date.now() }, null, 2);
+  try {
+    await navigator.clipboard.writeText(payload);
+    toast("已复制导出内容（JSON）");
+  } catch {
+    // fallback prompt
+    window.prompt("复制下面的内容（JSON）", payload);
+  }
+};
+
+const importBag = () => {
+  const raw = window.prompt("粘贴导入内容：支持 JSON（{name, bag} 或 [..]）或每行一条签", "");
+  if (!raw) return;
+
+  let name = "";
+  let bag = [];
+
+  const t = raw.trim();
+  try {
+    const obj = JSON.parse(t);
+    if (Array.isArray(obj)) {
+      bag = obj.map(x => String(x).trim()).filter(Boolean);
+    } else if (obj && typeof obj === "object") {
+      if (Array.isArray(obj.bag)) bag = obj.bag.map(x => String(x).trim()).filter(Boolean);
+      if (typeof obj.name === "string") name = obj.name;
+    }
+  } catch {
+    // plain lines
+    bag = normalizeLines(t);
+  }
+
+  if (!bag.length) { toast("导入失败：没有有效签"); return; }
+
+  setBag(bag, name || getName());
+  toast("导入成功");
+};
 
   const saveFromEditor = () => {
     const bagTitle = $("bagTitle");
@@ -534,6 +669,14 @@
   on("btnSave", "click", saveFromEditor);
   on("btnReset", "click", () => { setDefaultBag(); toast("已恢复默认签"); });
   on("btnMode", "click", () => { toggleMode(); toast(getMode() === "norepeat" ? "已切换：不重复" : "已切换：随机"); });
+
+
+on("btnDraw10", "click", () => drawBatch(10));
+on("btnDraw100", "click", () => drawBatch(100));
+on("btnDraw1000", "click", () => drawBatch(1000));
+on("btnClearHist", "click", clearHistory);
+on("btnExport", "click", exportBag);
+on("btnImport", "click", importBag);
 
   // init
   updateUI();
