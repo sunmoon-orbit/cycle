@@ -297,9 +297,33 @@
   const getName = () => (localStorage.getItem(LS_NAME) || defaultName).trim() || defaultName;
 
   const normalizeLines = (text) => {
-    return String(text || "")
+    const raw = String(text ?? "").trim();
+    if (!raw) return [];
+
+    // If user pasted JSON directly into the textarea (without using the Import button),
+    // try to parse it so we can normalize to "one line per slip".
+    const looksJson = raw.startsWith("[") || raw.startsWith("{");
+    if (looksJson) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(x => String(x).trim()).filter(Boolean);
+        }
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.bag)) {
+          return parsed.bag.map(x => String(x).trim()).filter(Boolean);
+        }
+      } catch (e) {
+        // fall through
+      }
+    }
+
+    // Otherwise: split by lines, and also gently clean common JSON-ish punctuation
+    // (e.g. ["a", "b"] pasted as text).
+    return raw
       .split(/\r?\n/)
       .map(s => s.trim())
+      .map(s => s.replace(/^[\[\],\s]+|[\[\],\s]+$/g, "").trim())  // trim [ ] ,
+      .map(s => s.replace(/^[\"'“”]+|[\"'“”]+$/g, "").trim())          // trim quotes
       .filter(Boolean);
   };
 
@@ -655,6 +679,9 @@ const importBag = () => {
     }
     setBag(lines, name);
     toast("已保存签筒");
+
+    // reflect normalized content back into the editor so it looks clean
+    if (bagInput) bagInput.value = getBag().join("\n");
     const tip = $("saveTip");
     if (tip) tip.style.display = "inline-block";
     setTimeout(() => { if (tip) tip.style.display = "none"; }, 1400);
