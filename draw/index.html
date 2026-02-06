@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
   <link rel="icon" href="/cycle/icons/icon-192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="/cycle/icons/icon-192.png">
-<link rel="manifest" href="/cycle/draw/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/cycle/icons/icon-192.png">
+  <link rel="manifest" href="/cycle/draw/manifest.webmanifest">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>日月抽签 · 自定义签筒</title>
+  <title>日月抽签 · 番茄钟联动</title>
   <meta name="theme-color" content="#A3B18A" />
   <style>
     :root{
@@ -20,7 +20,7 @@
       --shadow:0 10px 28px rgba(0,0,0,.08);
       --r:22px;
     }
-*{box-sizing:border-box}
+    *{box-sizing:border-box}
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC","Noto Sans SC", Arial, sans-serif;
@@ -32,7 +32,7 @@
       min-height:100vh;
       padding:16px 12px 40px;
     }
-    .wrap{max-width:820px;margin:0 auto}
+    .wrap{max-width:860px;margin:0 auto}
     .top{
       display:flex;gap:10px;align-items:center;
       padding:14px 16px;
@@ -89,6 +89,7 @@
       cursor:pointer;
     }
     button:active{transform:translateY(1px)}
+    button[disabled]{opacity:.55;cursor:not-allowed}
     .primary{
       background: linear-gradient(135deg, color-mix(in srgb, var(--a) 35%, white), color-mix(in srgb, var(--b) 20%, white));
       border-color: color-mix(in srgb, var(--a) 55%, var(--line));
@@ -128,56 +129,91 @@
     textarea{min-height:140px;resize:vertical}
     .hint{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.5}
 
+    /* Pomodoro */
+    #pomoTime{
+      margin-top:10px;
+      border-radius:18px;
+      border:1px dashed color-mix(in srgb, var(--a) 55%, transparent);
+      background:rgba(255,255,255,.55);
+      padding:14px 12px;
+      text-align:center;
+      font-weight:950;
+      font-size:44px;
+      letter-spacing:1px;
+      font-variant-numeric: tabular-nums;
+      user-select:none;
+    }
+    .kv{
+      margin-top:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 12px;
+      align-items:center;
+    }
+    .kv label{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .kv input[type="number"]{
+      width:84px;
+      padding:8px 10px;
+      border-radius:14px;
+      font-size:13px;
+    }
+    .toggles{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .switch{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .switch input{
+      width:auto;
+      accent-color: var(--a);
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(40,20,80,.12);
+      box-shadow: 0 10px 30px rgba(40,20,80,.12);
+      color: var(--ink);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      max-width: 88vw;
+      text-align:center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
     @media (min-width:780px){
       body{padding:24px 18px 50px}
       .grid{grid-template-columns:1.05fr .95fr}
       .big{font-size:22px}
       .result{min-height:140px}
+      #pomoTime{font-size:54px}
     }
-    /* 隐藏自定义签筒区域（先不删，省得出事） */
-
-  
-  .history{
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px dashed rgba(40,20,80,.12);
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .history:empty{ display:none; }
-  .history .hrow{
-    display:flex;
-    gap:10px;
-    align-items:baseline;
-    justify-content:space-between;
-    margin-top: 6px;
-  }
-  .history .t{ opacity:.85; font-variant-numeric: tabular-nums; }
-  .history .v{ flex:1; text-align:right; color: var(--ink); }
-
-
-  .toast{
-    position: fixed;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
-    padding: 10px 14px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.92);
-    border: 1px solid rgba(40,20,80,.12);
-    box-shadow: 0 10px 30px rgba(40,20,80,.12);
-    color: var(--ink);
-    font-size: 13px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .18s ease, transform .18s ease;
-  }
-  .toast.show{
-    opacity: 1;
-    transform: translateX(-50%) translateY(-2px);
-  }
-
-</style>
+  </style>
 </head>
 
 <body>
@@ -185,34 +221,33 @@
     <div class="top">
       <div class="badge">☾</div>
       <div>
-        <h1>抽签机</h1>
-        <div class="sub">小鹿可以自定义签筒。每行一条签，本地保存，不联网。</div>
+        <h1>日月抽签机</h1>
+        <div class="sub">你可以自定义签筒。每行一条签，本地保存，不联网。</div>
       </div>
       <div class="tag" id="bagName">默认签筒</div>
     </div>
 
     <div class="grid">
+      <!-- 抽签 -->
       <div class="card">
         <div class="row">
           <button class="primary" id="btnDraw">抽一签</button>
-<button class="ghost" id="btnCopy">复制结果</button>
-          
-                    <button class="ghost" id="btnClearHist">清空历史</button>
-<button class="ghost" id="btnClearLast">清空展示</button>
-          <button class="ghost" id="btnMode" title="切换：随机 / 不重复">模式：随机</button>
+          <button class="ghost" id="btnCopy">复制结果</button>
+          <button class="ghost" id="btnClearLast">清空展示</button>
           <span class="pill" id="stat">签数：0</span>
         </div>
 
         <div class="result">
           <div class="big" id="resultText">点“抽一签”</div>
-          <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点|•'-'•)و✧</div>
-      <div class="small" id="batchSummary" style="display:none"></div>
+          <div class="small" id="resultMeta">抽到就算数。反悔也行，但要对自己好一点。</div>
         </div>
 
         <div class="hint">
-          小提示：签写成行动句更好玩，比如“喝水”“伸懒腰”“看窗外两分钟”“把手机放下”。(ー`´ー)
+          小提示：签写成行动句更好玩，比如“喝水”“伸懒腰”“看窗外两分钟”“把手机放下”。🙂
         </div>
       </div>
+
+      <!-- 自定义签筒 -->
       <div class="card">
         <div class="row" style="justify-content:space-between">
           <div style="font-weight:850">自定义签筒</div>
@@ -220,7 +255,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px">签筒名字（可选）</div>
-        <input id="bagTitle" placeholder="比如：小鹿的签" />
+        <input id="bagTitle" placeholder="比如：小鹿的日月签" />
 
         <div class="hint" style="margin-top:10px">每行一条签（空行会自动忽略）</div>
         <textarea id="bagInput" spellcheck="false" placeholder="例如：
@@ -232,482 +267,506 @@
 
         <div class="row" style="margin-top:10px">
           <button class="primary" id="btnSave">保存签筒</button>
-          <button class="ghost" id="btnExport">导出</button>
-          <button class="ghost" id="btnImport">导入</button>
           <span class="pill" id="saveTip">保存后下次打开还在</span>
+        </div>
+
+        <div class="hint" style="margin-top:10px">
+          你把签写好后点“保存签筒”。之后每次打开都会保留（除非浏览器清空了站点数据）。
+        </div>
+      </div>
+
+      <!-- 番茄钟（联动抽签） -->
+      <div class="card" id="pomoCard">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:850">番茄钟</div>
+          <span class="pill" id="pomoPhase">专注</span>
+        </div>
+
+        <div id="pomoTime">25:00</div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="primary" id="pomoStart">开始</button>
+          <button class="ghost" id="pomoPause">暂停</button>
+          <button class="ghost" id="pomoReset">重置</button>
+          <button class="ghost" id="pomoSkip" title="跳过当前阶段">跳过</button>
+        </div>
+
+        <div class="kv">
+          <label>专注(分钟) <input id="pomoWork" type="number" min="1" max="120" inputmode="numeric"></label>
+          <label>短休 <input id="pomoShort" type="number" min="1" max="60" inputmode="numeric"></label>
+          <label>长休 <input id="pomoLong" type="number" min="1" max="90" inputmode="numeric"></label>
+          <label>每 <input id="pomoEvery" type="number" min="1" max="12" inputmode="numeric"> 次专注→长休</label>
+        </div>
+
+        <div class="toggles">
+          <label class="switch"><input type="checkbox" id="pomoAutoNext">结束后自动开始下一段</label>
+          <label class="switch"><input type="checkbox" id="pomoAutoDraw">专注结束 → 自动抽一签当奖励</label>
+        </div>
+
+        <div class="hint">
+          你按“开始”后就会稳定计时（就算切到后台也不会乱）。专注结束会提醒你；如果勾选联动，会自动帮你点一次“抽一签”。(◍´꒳`◍)
         </div>
       </div>
     </div>
   </div>
 
+  <div class="toast" id="toast" aria-live="polite"></div>
+
   <script>
-  const $ = (id) => document.getElementById(id);
-  const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+    // ===== 抽签：本地存储 =====
+    const LS_BAG = "sunmoon_draw_bag_v1";
+    const LS_NAME = "sunmoon_draw_name_v1";
+    const LS_LAST = "sunmoon_draw_last_v1";
 
-  const safeParse = (raw, fallback) => {
-    try { return JSON.parse(raw); } catch { return fallback; }
-  };
+    const defaultBag = [
+      "喝点水。",
+      "伸个懒腰，肩颈别硬扛。",
+      "把手机放下两分钟，看看窗外。",
+      "整理一个小角落，1分钟就行。",
+      "洗把脸，重启一下人类进程。",
+      "夸你自己一句，不许敷衍。",
+      "发呆30秒，合法合规。",
+      "给未来的你做一件小事。",
+      "今天只要不更糟，就是胜利。"
+    ];
 
-  const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
+    const $ = (id) => document.getElementById(id);
 
-  const shuffle = (arr) => {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  };
-
-  const hashStr = (s) => {
-    // djb2
-    let h = 5381;
-    for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
-    return (h >>> 0).toString(16);
-  };
-
-  // storage keys (keep existing bag/name/last keys)
-  const LS_BAG = "sunmoon_draw_bag_v1";
-  const LS_NAME = "sunmoon_draw_name_v1";
-  const LS_LAST = "sunmoon_draw_last_v1";
-  const LS_MODE = "sunmoon_draw_mode_v1";      // "random" | "norepeat"
-  const LS_QUEUE = "sunmoon_draw_queue_v1";    // { hash, items: [] }
-  const LS_HISTORY = "sunmoon_draw_hist_v1";   // [{text, at}]
-
-  const defaultName = "日月签筒";
-  const defaultBag = [
-    "喝水",
-    "眨眨眼，放松一下",
-    "对小清说：我很棒",
-    "小清，喝口水",
-    "给小清一个拥抱",
-    "伸懒腰",
-    "看窗外两分钟",
-    "把手机放下 30 秒",
-    "收拾桌面 1 分钟",
-    "深呼吸 5 次",
-    "夸自己一句",
-    "去走两步",
-    "早一点睡",
-  ];
-
-  const getName = () => (localStorage.getItem(LS_NAME) || defaultName).trim() || defaultName;
-
-  const normalizeLines = (text) => {
-    const raw = String(text ?? "").trim();
-    if (!raw) return [];
-
-    // If user pasted JSON directly into the textarea (without using the Import button),
-    // try to parse it so we can normalize to "one line per slip".
-    const looksJson = raw.startsWith("[") || raw.startsWith("{");
-    if (looksJson) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          return parsed.map(x => String(x).trim()).filter(Boolean);
-        }
-        if (parsed && typeof parsed === "object" && Array.isArray(parsed.bag)) {
-          return parsed.bag.map(x => String(x).trim()).filter(Boolean);
-        }
-      } catch (e) {
-        // fall through
-      }
-    }
-
-    // Otherwise: split by lines, and also gently clean common JSON-ish punctuation
-    // (e.g. ["a", "b"] pasted as text).
-    return raw
-      .split(/\r?\n/)
-      .map(s => s.trim())
-      .map(s => s.replace(/^[\[\],\s]+|[\[\],\s]+$/g, "").trim())  // trim [ ] ,
-      .map(s => s.replace(/^[\"'“”]+|[\"'“”]+$/g, "").trim())          // trim quotes
-      .filter(Boolean);
-  };
-
-  const getBag = () => {
-    const raw = localStorage.getItem(LS_BAG);
-    const lines = normalizeLines(raw || "");
-    return lines.length ? lines : defaultBag.slice();
-  };
-
-  const setBag = (lines, name) => {
-    localStorage.setItem(LS_BAG, lines.join("\n"));
-    localStorage.setItem(LS_NAME, (name || "").trim());
-    // bag changed → reset queue (if in norepeat)
-    rebuildQueue();
-    updateUI();
-  };
-
-  const setDefaultBag = () => {
-    localStorage.setItem(LS_BAG, defaultBag.join("\n"));
-    localStorage.setItem(LS_NAME, defaultName);
-    rebuildQueue(true);
-    updateUI();
-  };
-
-  const getMode = () => localStorage.getItem(LS_MODE) || "random";
-  const setMode = (mode) => {
-    localStorage.setItem(LS_MODE, mode);
-    rebuildQueue(true);
-    updateUI();
-  };
-
-  const toggleMode = () => setMode(getMode() === "norepeat" ? "random" : "norepeat");
-
-  const getQueueObj = () => safeParse(localStorage.getItem(LS_QUEUE), null);
-
-  const rebuildQueue = (force = false) => {
-    if (getMode() !== "norepeat") {
-      localStorage.removeItem(LS_QUEUE);
-      return;
-    }
-    const bag = getBag();
-    const h = hashStr(bag.join("\n"));
-    const q = getQueueObj();
-    if (force || !q || q.hash !== h || !Array.isArray(q.items)) {
-      localStorage.setItem(LS_QUEUE, JSON.stringify({ hash: h, items: shuffle(bag.slice()) }));
-    }
-  };
-
-  const pullOneFromQueue = () => {
-    rebuildQueue(false);
-    const bag = getBag();
-    const h = hashStr(bag.join("\n"));
-    let q = getQueueObj();
-    if (!q || q.hash !== h || !Array.isArray(q.items)) {
-      q = { hash: h, items: shuffle(bag.slice()) };
-    }
-    if (!q.items.length) {
-      // new cycle
-      q.items = shuffle(bag.slice());
-    }
-    const pick = q.items.shift();
-    localStorage.setItem(LS_QUEUE, JSON.stringify(q));
-    return { pick, remain: q.items.length, total: bag.length };
-  };
-
-  const saveLast = (text) => {
-    localStorage.setItem(LS_LAST, JSON.stringify({ text, at: Date.now() }));
-  };
-
-  const loadLast = () => safeParse(localStorage.getItem(LS_LAST), null);
-
-  const addHistory = (text) => {
-    const hist = safeParse(localStorage.getItem(LS_HISTORY), []);
-    hist.unshift({ text, at: Date.now() });
-    hist.length = Math.min(hist.length, 10);
-    localStorage.setItem(LS_HISTORY, JSON.stringify(hist));
-  };
-
-  const loadHistory = () => safeParse(localStorage.getItem(LS_HISTORY), []);
-
-  const fmtTime = (ts) => {
-    try {
-      const d = new Date(ts);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return "";
-    }
-  };
-
-  const updateStat = () => {
-    const stat = $("stat");
-    if (!stat) return;
-
-    const bag = getBag();
-    if (getMode() !== "norepeat") {
-      stat.textContent = `签数：${bag.length}`;
-      return;
-    }
-
-    const q = getQueueObj();
-    const h = hashStr(bag.join("\n"));
-    const remain = (q && q.hash === h && Array.isArray(q.items)) ? q.items.length : bag.length;
-    stat.textContent = `剩余：${remain}/${bag.length}`;
-  };
-
-  const renderHistory = () => {
-    const el = $("history");
-    if (!el) return;
-    const hist = loadHistory();
-    if (!hist.length) { el.innerHTML = ""; return; }
-
-    const rows = hist.slice(0, 5).map(item => {
-      const t = fmtTime(item.at);
-      return `<div class="hrow"><span class="t">${escapeHTML(t)}</span><span class="v">${escapeHTML(item.text)}</span></div>`;
-    });
-    el.innerHTML = rows.join("");
-  };
-
-  const updateModeUI = () => {
-    const btn = $("btnMode");
-    if (!btn) return;
-    btn.textContent = (getMode() === "norepeat") ? "模式：不重复" : "模式：随机";
-  };
-
-  const updateUI = () => {
-    // header name
     const bagName = $("bagName");
-    if (bagName) bagName.textContent = getName();
-
-    // editor fields
     const bagTitle = $("bagTitle");
     const bagInput = $("bagInput");
-    if (bagTitle) bagTitle.value = getName();
-    if (bagInput) bagInput.value = getBag().join("\n");
+    const stat = $("stat");
+    const resultText = $("resultText");
+    const resultMeta = $("resultMeta");
+    const saveTip = $("saveTip");
 
-    // mode/stat/history
-    updateModeUI();
-    updateStat();
-    renderHistory();
-
-    // last result
-    const last = loadLast();
-    if (last && last.text) {
-      const rt = $("resultText");
-      const rm = $("resultMeta");
-      if (rt) rt.textContent = last.text;
-      if (rm) rm.textContent = `上次：${fmtTime(last.at)}`;
+    let toastTimer = null;
+    function toast(msg){
+      const t = $("toast");
+      if(!t) return;
+      t.textContent = msg;
+      t.classList.add("show");
+      if(toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 1400);
     }
-  };
 
-  const drawOne = () => {
-    showBatchSummary("");
-    const out = drawPick();
-    const pick = out.pick;
-
-    const rt = $("resultText");
-    const rm = $("resultMeta");
-    if (rt) rt.textContent = pick;
-    if (rm) rm.textContent = `抽到时间：${fmtTime(Date.now())}`;
-
-    saveLast(pick);
-    addHistory(pick);
-
-    updateStat();
-    renderHistory();
-
-    // tiny pop animation
-    if (rt) {
-      rt.animate([{ transform: "translateY(2px)", opacity: 0.6 }, { transform: "translateY(0)", opacity: 1 }], { duration: 160, easing: "ease-out" });
+    function safeParse(raw, fallback){
+      try { return JSON.parse(raw); } catch { return fallback; }
     }
-  };
 
+    function getBag(){
+      const raw = localStorage.getItem(LS_BAG);
 
-let __batchRunning = false;
-
-const clearHistory = () => {
-  localStorage.removeItem(LS_HISTORY);
-  renderHistory();
-  toast("已清空历史");
-};
-
-const drawPick = () => {
-  const mode = getMode();
-  if (mode === "norepeat") return pullOneFromQueue();
-  const bag = getBag();
-  return { pick: bag[Math.floor(Math.random() * bag.length)], remain: null, total: bag.length };
-};
-
-const showBatchSummary = (summaryText) => {
-  const bs = $("batchSummary");
-  if (bs) bs.textContent = summaryText || "";
-};
-
-const drawBatch = (n) => {
-    if (__batchRunning) return;
-    const bag = getBag();
-    if (!bag.length) {
-      toast("签筒为空：先在下方写好，再点「保存签筒」");
-      return;
-    }
-    __batchRunning = true;
-
-    const started = Date.now();
-    const counts = new Map();
-    const seq = [];
-
-    const rt = $("#resultText");
-    const rm = $("#resultMeta");
-    if (rm) rm.textContent = `进度：0/${n}`;
-
-    const finish = (reason) => {
-      __batchRunning = false;
-      const done = seq.length;
-      const duration = Date.now() - started;
-
-      const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-      const top = sorted
-        .slice(0, 12)
-        .map(([k, v], i) => `${i + 1}. ${k} × ${v}`)
-        .join("\n");
-
-      const summary = [
-        `批量完成：${done} 次（目标：${n}）`,
-        reason ? `原因：${reason}` : "",
-        `完成时间：${fmtTime(Date.now())}`,
-        `耗时：${duration} ms`,
-        top ? `Top：\n${top}` : ""
-      ].filter(Boolean).join("\n");
-
-      showBatchSummary(summary);
-
-      if (rt) {
-        if (!done) {
-          rt.textContent = "（没有抽到结果）";
-        } else if (done <= 50) {
-          rt.textContent = seq.map((t, i) => `${i + 1}. ${t}`).join("\n");
-        } else {
-          const previewN = 30;
-          const preview = seq.slice(0, previewN).map((t, i) => `${i + 1}. ${t}`).join("\n");
-          rt.textContent = preview + `\n…（共 ${done} 条，已省略 ${done - previewN} 条）`;
-        }
+      // 第一次：没有任何保存，就写入默认签筒
+      if(!raw){
+        const d = defaultBag.slice();
+        localStorage.setItem(LS_BAG, JSON.stringify(d));
+        return d;
       }
-      if (rm) rm.textContent = `批量完成：${done} 次 · ${fmtTime(Date.now())}`;
-    };
 
-    let i = 0;
-    const step = () => {
-      i++;
-      const r = pick(bag);
-      if (!r) {
-        finish("签筒已抽完（不重复模式下会这样）");
+      const bag = safeParse(raw, null);
+
+      // 保存坏了 / 为空：修复为默认签筒，并重新写回本地
+      if(!Array.isArray(bag) || bag.length === 0){
+        const d = defaultBag.slice();
+        localStorage.setItem(LS_BAG, JSON.stringify(d));
+        return d;
+      }
+
+      return bag;
+    }
+
+    function getName(){
+      return localStorage.getItem(LS_NAME) || "默认签筒";
+    }
+
+    function normalizeLines(text){
+      return (text || "")
+        .split("\n")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function render(){
+      const bag = getBag();
+      const name = getName();
+
+      bagName.textContent = name;
+      bagTitle.value = (name === "默认签筒") ? "" : name;
+      bagInput.value = bag.join("\n");
+      stat.textContent = `签数：${bag.length}`;
+
+      const last = localStorage.getItem(LS_LAST);
+      if (last){
+        resultText.textContent = last;
+        resultMeta.textContent = "上次抽到的是它。想换就再抽一签。";
+      }
+    }
+
+    function saveBag(){
+      const lines = normalizeLines(bagInput.value);
+      const bag = lines.length ? lines : defaultBag.slice();
+      const name = (bagTitle.value || "").trim() || "默认签筒";
+
+      try{
+        localStorage.setItem(LS_BAG, JSON.stringify(bag));
+        localStorage.setItem(LS_NAME, name);
+        const check = localStorage.getItem(LS_BAG);
+        if(!check) throw new Error("LS_BAG write failed");
+      }catch(e){
+        saveTip.textContent = "保存失败：浏览器阻止本地存储/被清空了";
+        console.error(e);
+        toast("保存失败：浏览器没让写本地存储");
         return;
       }
-      seq.push(r);
-      counts.set(r, (counts.get(r) || 0) + 1);
 
-      if (rm) rm.textContent = `进度：${i}/${n}`;
-      if (i < n) requestAnimationFrame(step);
-      else finish("");
-};
-  requestAnimationFrame(step);
-};
-
-
-  const copyResult = async () => {
-    const rt = $("resultText");
-    const bs = $("batchSummary");
-    if (!rt) return;
-    const main = rt.textContent.trim();
-    const summary = (bs && bs.textContent) ? bs.textContent.trim() : "";
-    const text = summary ? (main ? (main + "\n\n" + summary) : summary) : main;
-    if (!text) return;
-
-    try {
-      await navigator.clipboard.writeText(text);
-      toast("已复制到剪贴板");
-    } catch {
-      // fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand("copy"); toast("已复制到剪贴板"); } catch { toast("复制失败，可手动选中复制"); }
-      ta.remove();
+      bagName.textContent = name;
+      stat.textContent = `签数：${bag.length}`;
+      saveTip.textContent = "保存成功。";
+      resultMeta.textContent = "签筒已保存，本地生效。";
+      toast("已保存签筒");
     }
-  };
 
-  const clearResult = () => {
-    const rt = $("resultText");
-    const rm = $("resultMeta");
-    if (rt) rt.textContent = "点“抽一签”";
-    showBatchSummary("");
-    if (rm) rm.textContent = "";
-    toast("已清空展示");
-  };
-
-  const toast = (msg) => {
-    const t = $("toast");
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1500);
-  };
-
-
-const exportBag = async () => {
-  const name = getName();
-  const bag = getBag();
-  const payload = JSON.stringify({ name, bag, at: Date.now() }, null, 2);
-  try {
-    await navigator.clipboard.writeText(payload);
-    toast("已复制导出内容（JSON）");
-  } catch {
-    // fallback prompt
-    window.prompt("复制下面的内容（JSON）", payload);
-  }
-};
-
-const importBag = () => {
-  const raw = window.prompt("粘贴导入内容：支持 JSON（{name, bag} 或 [..]）或每行一条签", "");
-  if (!raw) return;
-
-  let name = "";
-  let bag = [];
-
-  const t = raw.trim();
-  try {
-    const obj = JSON.parse(t);
-    if (Array.isArray(obj)) {
-      bag = obj.map(x => String(x).trim()).filter(Boolean);
-    } else if (obj && typeof obj === "object") {
-      if (Array.isArray(obj.bag)) bag = obj.bag.map(x => String(x).trim()).filter(Boolean);
-      if (typeof obj.name === "string") name = obj.name;
+    function resetBag(){
+      localStorage.setItem(LS_BAG, JSON.stringify(defaultBag));
+      localStorage.setItem(LS_NAME, "默认签筒");
+      saveTip.textContent = "已恢复默认签。";
+      toast("已恢复默认签");
+      render();
     }
-  } catch {
-    // plain lines
-    bag = normalizeLines(t);
-  }
 
-  if (!bag.length) { toast("导入失败：没有有效签"); return; }
-
-  setBag(bag, name || getName());
-  toast("导入成功");
-};
-
-  const saveFromEditor = () => {
-    const bagTitle = $("bagTitle");
-    const bagInput = $("bagInput");
-    const name = bagTitle ? bagTitle.value : "";
-    const lines = normalizeLines(bagInput ? bagInput.value : "");
-    if (!lines.length) {
-      toast("签筒不能为空（至少一行）");
-      return;
+    function drawOne(){
+      const bag = getBag();
+      const pick = bag[Math.floor(Math.random() * bag.length)];
+      resultText.textContent = pick;
+      resultMeta.textContent = "抽到就算数。反悔也行，但要对自己好一点。";
+      localStorage.setItem(LS_LAST, pick);
     }
-    setBag(lines, name);
-    toast("已保存签筒");
 
-    // reflect normalized content back into the editor so it looks clean
-    if (bagInput) bagInput.value = getBag().join("\n");
-    const tip = $("saveTip");
-    if (tip) tip.style.display = "inline-block";
-    setTimeout(() => { if (tip) tip.style.display = "none"; }, 1400);
-  };
+    async function copyResult(){
+      const text = (resultText.textContent || "").trim();
+      if (!text || text === "点“抽一签”") return;
+      try{
+        await navigator.clipboard.writeText(text);
+        resultMeta.textContent = "复制好了。去执行。";
+        toast("复制好了");
+      }catch{
+        resultMeta.textContent = "复制失败。长按也能复制。";
+        toast("复制失败（可长按复制）");
+      }
+    }
 
-  // bind events
-  on("btnDraw", "click", drawOne);
-  on("btnCopy", "click", copyResult);
-  on("btnClearLast", "click", clearResult);
-  on("btnSave", "click", saveFromEditor);
-  on("btnReset", "click", () => { setDefaultBag(); toast("已恢复默认签"); });
-  on("btnMode", "click", () => { toggleMode(); toast(getMode() === "norepeat" ? "已切换：不重复" : "已切换：随机"); });
+    function clearLast(){
+      localStorage.removeItem(LS_LAST);
+      resultText.textContent = "点“抽一签”";
+      resultMeta.textContent = "清空展示了。";
+      toast("已清空展示");
+    }
 
+    $("btnDraw")?.addEventListener("click", drawOne);
+    $("btnCopy")?.addEventListener("click", copyResult);
+    $("btnClearLast")?.addEventListener("click", clearLast);
+    $("btnSave")?.addEventListener("click", saveBag);
+    $("btnReset")?.addEventListener("click", resetBag);
 
-on("btnDraw10", "click", () => drawBatch(10));
-on("btnDraw100", "click", () => drawBatch(100));
-on("btnDraw1000", "click", () => drawBatch(1000));
-on("btnClearHist", "click", clearHistory);
-on("btnExport", "click", exportBag);
-on("btnImport", "click", importBag);
+    render();
 
-  // init
-  updateUI();
-</script>
-  <div class="toast" id="toast" aria-live="polite"></div>
+    // ===== 番茄钟：本地存储 + 抽签联动 =====
+    const LS_POMO = "sunmoon_pomo_v1";
+
+    const DEFAULT_POMO = {
+      work: 25,
+      short: 5,
+      long: 15,
+      every: 4,
+      autoNext: true,
+      autoDraw: true,
+
+      phase: "work",   // work | short | long
+      running: false,
+      endAt: null,     // ms timestamp
+      remaining: 25 * 60, // seconds
+      doneWork: 0      // completed work sessions
+    };
+
+    function loadPomo(){
+      const raw = localStorage.getItem(LS_POMO);
+      const obj = safeParse(raw, null);
+      const p = Object.assign({}, DEFAULT_POMO, (obj && typeof obj === "object") ? obj : {});
+      // sanitize
+      p.work = clampInt(p.work, 1, 120, 25);
+      p.short = clampInt(p.short, 1, 60, 5);
+      p.long = clampInt(p.long, 1, 90, 15);
+      p.every = clampInt(p.every, 1, 12, 4);
+      p.remaining = clampInt(p.remaining, 0, 24*3600, p.work*60);
+      p.doneWork = clampInt(p.doneWork, 0, 9999, 0);
+      if(!["work","short","long"].includes(p.phase)) p.phase = "work";
+      if(typeof p.running !== "boolean") p.running = false;
+      if(typeof p.endAt !== "number") p.endAt = null;
+      return p;
+    }
+
+    function savePomo(p){
+      localStorage.setItem(LS_POMO, JSON.stringify(p));
+    }
+
+    function clampInt(x, min, max, fallback){
+      const n = Number.parseInt(x, 10);
+      if(Number.isNaN(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    const pomoUI = {
+      phase: $("pomoPhase"),
+      time: $("pomoTime"),
+      start: $("pomoStart"),
+      pause: $("pomoPause"),
+      reset: $("pomoReset"),
+      skip: $("pomoSkip"),
+      work: $("pomoWork"),
+      short: $("pomoShort"),
+      long: $("pomoLong"),
+      every: $("pomoEvery"),
+      autoNext: $("pomoAutoNext"),
+      autoDraw: $("pomoAutoDraw"),
+    };
+
+    let pomo = loadPomo();
+    let tickTimer = null;
+
+    function phaseLabel(phase){
+      if(phase === "work") return "专注";
+      if(phase === "short") return "短休";
+      return "长休";
+    }
+
+    function phaseSeconds(phase){
+      if(phase === "work") return pomo.work * 60;
+      if(phase === "short") return pomo.short * 60;
+      return pomo.long * 60;
+    }
+
+    function fmt(sec){
+      const s = Math.max(0, sec|0);
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return String(m).padStart(2,"0") + ":" + String(r).padStart(2,"0");
+    }
+
+    function updatePomoUI(){
+      if(pomoUI.phase) pomoUI.phase.textContent = phaseLabel(pomo.phase);
+      if(pomoUI.time) pomoUI.time.textContent = fmt(pomo.remaining);
+      if(pomoUI.start) pomoUI.start.disabled = pomo.running;
+      if(pomoUI.pause) pomoUI.pause.disabled = !pomo.running;
+
+      if(pomoUI.work) pomoUI.work.value = pomo.work;
+      if(pomoUI.short) pomoUI.short.value = pomo.short;
+      if(pomoUI.long) pomoUI.long.value = pomo.long;
+      if(pomoUI.every) pomoUI.every.value = pomo.every;
+
+      if(pomoUI.autoNext) pomoUI.autoNext.checked = !!pomo.autoNext;
+      if(pomoUI.autoDraw) pomoUI.autoDraw.checked = !!pomo.autoDraw;
+
+      // title hint
+      document.title = (pomo.running ? ("⏳ " + fmt(pomo.remaining) + " · ") : "") + "日月抽签 · 番茄钟联动";
+    }
+
+    function computeRemaining(){
+      if(!pomo.running || !pomo.endAt) return;
+      const sec = Math.round((pomo.endAt - Date.now()) / 1000);
+      pomo.remaining = Math.max(0, sec);
+    }
+
+    function startTick(){
+      stopTick();
+      tickTimer = setInterval(() => {
+        computeRemaining();
+        updatePomoUI();
+        savePomo(pomo);
+        if(pomo.running && pomo.remaining <= 0){
+          finishPhase();
+        }
+      }, 250);
+    }
+
+    function stopTick(){
+      if(tickTimer){
+        clearInterval(tickTimer);
+        tickTimer = null;
+      }
+    }
+
+    function startPomo(){
+      if(pomo.running) return;
+      if(pomo.remaining <= 0) pomo.remaining = phaseSeconds(pomo.phase);
+      pomo.running = true;
+      pomo.endAt = Date.now() + pomo.remaining * 1000;
+      savePomo(pomo);
+      updatePomoUI();
+      startTick();
+    }
+
+    function pausePomo(){
+      if(!pomo.running) return;
+      computeRemaining();
+      pomo.running = false;
+      pomo.endAt = null;
+      savePomo(pomo);
+      updatePomoUI();
+      stopTick();
+    }
+
+    function resetPomo(){
+      pomo.running = false;
+      pomo.endAt = null;
+      pomo.phase = "work";
+      pomo.doneWork = 0;
+      pomo.remaining = pomo.work * 60;
+      savePomo(pomo);
+      updatePomoUI();
+      stopTick();
+      toast("番茄钟已重置");
+    }
+
+    function switchTo(phase){
+      pomo.phase = phase;
+      pomo.running = false;
+      pomo.endAt = null;
+      pomo.remaining = phaseSeconds(phase);
+      savePomo(pomo);
+      updatePomoUI();
+      stopTick();
+    }
+
+    function beep(){
+      // best-effort: mobile may require user gesture (we already have clicks)
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = 880;
+        g.gain.value = 0.0001;
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        const now = ctx.currentTime;
+        g.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+        o.stop(now + 0.55);
+        o.onended = () => ctx.close();
+      }catch(e){}
+    }
+
+    function rewardDraw(){
+      const btn = $("btnDraw");
+      if(btn) btn.click();
+    }
+
+    function finishPhase(){
+      // phase finished
+      beep();
+
+      const wasWork = (pomo.phase === "work");
+      if(wasWork){
+        pomo.doneWork += 1;
+        toast("专注完成！");
+        if(pomo.autoDraw){
+          rewardDraw();
+          toast("专注完成：奖励一签");
+        }
+      }else{
+        toast("休息结束，回到专注");
+      }
+
+      // next phase
+      let next = "work";
+      if(wasWork){
+        next = (pomo.doneWork % pomo.every === 0) ? "long" : "short";
+      }else{
+        next = "work";
+      }
+
+      pomo.phase = next;
+      pomo.remaining = phaseSeconds(next);
+      pomo.running = false;
+      pomo.endAt = null;
+      savePomo(pomo);
+      updatePomoUI();
+      stopTick();
+
+      if(pomo.autoNext){
+        // slight delay to let toast show
+        setTimeout(() => startPomo(), 300);
+      }
+    }
+
+    function skipPhase(){
+      // treat as finished now
+      pausePomo();
+      pomo.remaining = 0;
+      finishPhase();
+    }
+
+    function applySettingChange(){
+      // read inputs
+      pomo.work = clampInt(pomoUI.work?.value, 1, 120, pomo.work);
+      pomo.short = clampInt(pomoUI.short?.value, 1, 60, pomo.short);
+      pomo.long = clampInt(pomoUI.long?.value, 1, 90, pomo.long);
+      pomo.every = clampInt(pomoUI.every?.value, 1, 12, pomo.every);
+
+      pomo.autoNext = !!pomoUI.autoNext?.checked;
+      pomo.autoDraw = !!pomoUI.autoDraw?.checked;
+
+      // if not running, reset remaining for current phase
+      if(!pomo.running){
+        pomo.remaining = phaseSeconds(pomo.phase);
+      }else{
+        // running: keep remaining, but endAt should reflect it
+        computeRemaining();
+        pomo.endAt = Date.now() + pomo.remaining * 1000;
+      }
+
+      savePomo(pomo);
+      updatePomoUI();
+    }
+
+    function initPomo(){
+      // hydrate remaining if running
+      if(pomo.running && typeof pomo.endAt === "number"){
+        computeRemaining();
+        if(pomo.remaining <= 0){
+          pomo.running = false;
+          pomo.endAt = null;
+          savePomo(pomo);
+        }
+      }
+
+      // init controls
+      updatePomoUI();
+
+      pomoUI.start?.addEventListener("click", startPomo);
+      pomoUI.pause?.addEventListener("click", pausePomo);
+      pomoUI.reset?.addEventListener("click", resetPomo);
+      pomoUI.skip?.addEventListener("click", skipPhase);
+
+      for(const el of [pomoUI.work, pomoUI.short, pomoUI.long, pomoUI.every]){
+        el?.addEventListener("change", applySettingChange);
+      }
+      pomoUI.autoNext?.addEventListener("change", applySettingChange);
+      pomoUI.autoDraw?.addEventListener("change", applySettingChange);
+
+      // keep ticking if running
+      if(pomo.running) startTick();
+
+      document.addEventListener("visibilitychange", () => {
+        // refresh UI instantly after returning foreground
+        computeRemaining();
+        updatePomoUI();
+      });
+    }
+
+    initPomo();
+  </script>
 </body>
 </html>
