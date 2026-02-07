@@ -61,7 +61,32 @@
       white-space:nowrap;
     }
 
-    .grid{
+    
+    .right{
+      margin-left:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .right .tag{margin-left:0}
+    .themes{display:flex;gap:8px;align-items:center}
+    .swatch{
+      width:22px;height:22px;
+      border-radius:999px;
+      padding:0;
+      border:1px solid var(--line);
+      box-shadow:none;
+      cursor:pointer;
+    }
+    .swatch[aria-pressed="true"]{
+      border-color: color-mix(in srgb, var(--a) 70%, var(--line));
+      box-shadow:0 10px 18px rgba(0,0,0,.06);
+    }
+    .swatch:active{transform:translateY(1px)}
+    .swatch:focus{outline:none;box-shadow:0 0 0 3px color-mix(in srgb, var(--a) 30%, transparent);}
+.grid{
       margin-top:12px;
       display:grid;
       grid-template-columns:1fr;
@@ -224,7 +249,16 @@
         <h1>日月抽签机</h1>
         <div class="sub">你可以自定义签筒。每行一条签，本地保存，不联网。</div>
       </div>
-      <div class="tag" id="bagName">默认签筒</div>
+      <div class="right">
+        <div class="themes" id="themeBar" aria-label="主题色">
+          <button class="swatch" type="button" data-theme="fog"   title="雾绿" aria-pressed="true"  style="background:conic-gradient(from 210deg,#A3B18A,#9AA6B2,#CBBFAF,#A3B18A)"></button>
+          <button class="swatch" type="button" data-theme="blue"  title="雾蓝" aria-pressed="false" style="background:conic-gradient(from 210deg,#8AA6C1,#A3B18A,#CBBFAF,#8AA6C1)"></button>
+          <button class="swatch" type="button" data-theme="rose"  title="玫瑰" aria-pressed="false" style="background:conic-gradient(from 210deg,#D6A6A6,#9AA6B2,#CBBFAF,#D6A6A6)"></button>
+          <button class="swatch" type="button" data-theme="lilac" title="丁香" aria-pressed="false" style="background:conic-gradient(from 210deg,#B6A6D6,#9AA6B2,#CBBFAF,#B6A6D6)"></button>
+          <button class="swatch" type="button" data-theme="cocoa" title="可可" aria-pressed="false" style="background:conic-gradient(from 210deg,#B59C8C,#A3B18A,#CBBFAF,#B59C8C)"></button>
+        </div>
+        <div class="tag" id="bagName">默认签筒</div>
+      </div>
     </div>
 
     <div class="grid">
@@ -332,6 +366,41 @@
 
     const $ = (id) => document.getElementById(id);
 
+    // ===== 主题色：只换主色/辅色（不会影响你的数据）=====
+    const LS_THEME = "sunmoon_draw_theme_v1";
+    const THEMES = {
+      fog:   { a:"#A3B18A", b:"#9AA6B2" }, // 雾绿
+      blue:  { a:"#8AA6C1", b:"#A3B18A" }, // 雾蓝
+      rose:  { a:"#D6A6A6", b:"#9AA6B2" }, // 玫瑰
+      lilac: { a:"#B6A6D6", b:"#9AA6B2" }, // 丁香
+      cocoa: { a:"#B59C8C", b:"#A3B18A" }  // 可可
+    };
+
+    function applyTheme(key){
+      const t = THEMES[key] || THEMES.fog;
+      document.documentElement.style.setProperty("--a", t.a);
+      document.documentElement.style.setProperty("--b", t.b);
+      localStorage.setItem(LS_THEME, key);
+
+      // PWA / 地址栏颜色
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute("content", t.a);
+
+      // 小按钮选中态
+      document.querySelectorAll(".swatch").forEach(btn=>{
+        btn.setAttribute("aria-pressed", btn.dataset.theme === key ? "true" : "false");
+      });
+    }
+
+    function initTheme(){
+      document.querySelectorAll(".swatch").forEach(btn=>{
+        btn.addEventListener("click", ()=> applyTheme(btn.dataset.theme));
+      });
+      const saved = localStorage.getItem(LS_THEME);
+      applyTheme(saved && THEMES[saved] ? saved : "fog");
+    }
+
+
     const bagName = $("bagName");
     const bagTitle = $("bagTitle");
     const bagInput = $("bagInput");
@@ -339,6 +408,9 @@
     const resultText = $("resultText");
     const resultMeta = $("resultMeta");
     const saveTip = $("saveTip");
+
+    initTheme();
+
 
     let toastTimer = null;
     function toast(msg){
