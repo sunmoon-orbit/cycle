@@ -1,5 +1,5 @@
 /* PWA Service Worker - cute_cycle_tracker */
-const CACHE_NAME = "cute-cycle-cache-20260207052850"; // ✅ bump name to force update
+const CACHE_NAME = "cute-cycle-cache-20260207140000"; // ✅ bump name to force update
 const PRECACHE_URLS = [
   "./",
   "./index.html",
