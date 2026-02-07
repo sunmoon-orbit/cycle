@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SunMoon Vault · 句子与日记</title>
+
+  <!-- Icons / PWA (reuse repo root icons & manifest) -->
+  <link rel="icon" href="../icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <meta name="theme-color" content="#A3B18A" />
+
+  <style>
+    :root{
+      --bg:#E8E4DE;
+      --card:#F5F2EE;
+      --ink:#2E2E2E;
+      --muted:#6E6A63;
+      --line:#D7D1C9;
+
+      --a:#A3B18A;   /* sage */
+      --b:#9AA6B2;   /* mist */
+      --shadow:0 10px 28px rgba(0,0,0,.08);
+      --r:22px;
+      --r2:16px;
+      --btnr:14px;
+
+      --danger:#C96A6A;
+      --ok:#7E9B7E;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Noto Sans SC",Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 600px at 10% 0%, color-mix(in srgb, var(--a) 24%, transparent), transparent 60%),
+        radial-gradient(900px 600px at 90% 10%, color-mix(in srgb, var(--b) 18%, transparent), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      padding:16px 12px 40px;
+    }
+
+    .wrap{max-width:900px;margin:0 auto}
+    .top{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);
+      background:rgba(245,242,238,.78);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background:conic-gradient(from 210deg, var(--a), var(--b), #C8BEA7, var(--a));
+      display:grid;place-items:center;
+      font-weight:900;color:#fff;
+      user-select:none;
+    }
+    h1{margin:0;font-size:16px;letter-spacing:.2px}
+    .sub{margin-top:2px;font-size:12px;color:var(--muted)}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .a{
+      text-decoration:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.55);
+      padding:9px 12px;border-radius:999px;
+      color:var(--ink);
+      font-size:12px;
+      user-select:none;
+    }
+    .a:hover{filter:brightness(.98)}
+    .grid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      background:rgba(245,242,238,.78);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+      padding:14px;
+    }
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.55);
+      padding:10px 12px;border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      background:linear-gradient(135deg, color-mix(in srgb, var(--a) 35%, white), color-mix(in srgb, var(--b) 18%, white));
+      border-color:color-mix(in srgb, var(--a) 55%, var(--line));
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .row > *{flex:1}
+    .row .tight{flex:0 0 auto}
+    label{font-size:12px;color:var(--muted);font-weight:700}
+    input, textarea, select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.72);
+      color:var(--ink);
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:96px;resize:vertical;line-height:1.5}
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:var(--btnr);
+      padding:10px 12px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+      box-shadow:0 10px 18px rgba(0,0,0,.06);
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      background:linear-gradient(135deg, color-mix(in srgb, var(--a) 35%, white), color-mix(in srgb, var(--b) 20%, white));
+      border-color:color-mix(in srgb, var(--a) 55%, var(--line));
+    }
+    .btn.ghost{background:transparent;box-shadow:none}
+    .btn.danger{
+      background:color-mix(in srgb, var(--danger) 12%, white);
+      border-color:color-mix(in srgb, var(--danger) 45%, var(--line));
+    }
+
+    .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.6}
+    .split{height:1px;background:rgba(215,209,201,.7);margin:12px 0}
+
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.55);
+      padding:12px;
+    }
+    .itemTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .itemText{font-weight:850;letter-spacing:.2px;white-space:pre-wrap;word-break:break-word}
+    .meta{margin-top:6px;font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+    .tag{
+      display:inline-block;
+      padding:2px 8px;
+      border:1px solid rgba(215,209,201,.9);
+      border-radius:999px;
+      background:rgba(255,255,255,.6);
+      font-size:12px;
+    }
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .smallBtn{
+      appearance:none;cursor:pointer;user-select:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.65);
+      border-radius:999px;
+      padding:6px 10px;
+      font-weight:800;
+      font-size:12px;
+    }
+    .smallBtn:hover{filter:brightness(.98)}
+    .pinned{border-color:color-mix(in srgb, var(--a) 55%, var(--line))}
+    .pill{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.55);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(20px);
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(40,20,80,.12);
+      box-shadow:0 10px 30px rgba(40,20,80,.12);
+      font-weight:800;
+      font-size:12px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-2px)}
+    .sr{position:absolute;left:-9999px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">☾</div>
+        <div>
+          <h1>SunMoon Vault · 句子与日记</h1>
+          <div class="sub">本地保存，不联网。收藏句子 + 写小日记 ✍️</div>
+        </div>
+      </div>
+      <div class="nav">
+        <a class="a" href="../">🌙 小月历</a>
+        <a class="a" href="../draw/">🎴 抽签</a>
+        <a class="a" href="./">📚 Vault</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: main -->
+      <div class="card">
+        <div class="tabs">
+          <button class="tab active" id="tabQuotes" type="button">收藏句子</button>
+          <button class="tab" id="tabDiary" type="button">小日记</button>
+          <span class="pill" id="statPill">—</span>
+        </div>
+
+        <!-- Quotes panel -->
+        <div id="panelQuotes">
+          <div class="split"></div>
+
+          <div class="row">
+            <div>
+              <label for="qText">句子内容</label>
+              <textarea id="qText" placeholder="把你喜欢的句子放进来。可以是你写的，也可以是别人说的。"></textarea>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="qNote">来源/备注（可选）</label>
+              <input id="qNote" placeholder="比如：某天的我们 / 书名 / 歌词（注意版权）" />
+            </div>
+            <div>
+              <label for="qTags">标签（可选）</label>
+              <input id="qTags" placeholder="用逗号分隔：温柔, 励志, 夜晚..." />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary tight" id="btnAddQuote" type="button">➕ 收进小盒子</button>
+            <button class="btn ghost tight" id="btnClearQuoteDraft" type="button">清空输入</button>
+          </div>
+
+          <div class="hint">小提示：标签是可选的，后面可以用搜索快速找到某一类句子。</div>
+
+          <div class="split"></div>
+
+          <div class="row">
+            <div>
+              <label for="qSearch">搜索</label>
+              <input id="qSearch" placeholder="搜内容 / 备注 / 标签…" />
+            </div>
+            <div>
+              <label for="qSort">排序</label>
+              <select id="qSort">
+                <option value="pinned">置顶优先</option>
+                <option value="new">最新在前</option>
+                <option value="old">最旧在前</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="list" id="quoteList"></div>
+          <div class="hint" id="quoteEmpty" style="display:none;">现在还没有收藏。先放一句你最喜欢的吧 ☁️</div>
+        </div>
+
+        <!-- Diary panel -->
+        <div id="panelDiary" style="display:none;">
+          <div class="split"></div>
+
+          <div class="row">
+            <div>
+              <label for="dDate">日期</label>
+              <input id="dDate" type="date" />
+            </div>
+            <div>
+              <label for="dTitle">标题（可选）</label>
+              <input id="dTitle" placeholder="比如：今天心情还不错" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="dContent">内容</label>
+              <textarea id="dContent" placeholder="写一点点就行。"></textarea>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary tight" id="btnSaveDiary" type="button">💾 保存日记</button>
+            <button class="btn ghost tight" id="btnClearDiaryDraft" type="button">清空输入</button>
+          </div>
+
+          <div class="hint">日记按日期存一条；同一天再次保存会覆盖更新。</div>
+
+          <div class="split"></div>
+
+          <div class="row">
+            <div>
+              <label for="dSearch">搜索</label>
+              <input id="dSearch" placeholder="搜标题/内容…" />
+            </div>
+            <div>
+              <label for="dSort">排序</label>
+              <select id="dSort">
+                <option value="new">最新在前</option>
+                <option value="old">最旧在前</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="list" id="diaryList"></div>
+          <div class="hint" id="diaryEmpty" style="display:none;">还没有日记。写一句也算记录 ✨</div>
+        </div>
+      </div>
+
+      <!-- Right: backup/tools -->
+      <div class="card">
+        <div style="font-weight:900;letter-spacing:.2px;font-size:14px">备份与工具</div>
+        <div class="hint" style="margin-top:6px">为了防止浏览器清缓存/换设备导致丢失，建议偶尔导出一次。</div>
+
+        <div class="split"></div>
+
+        <div class="row">
+          <button class="btn primary tight" id="btnExport" type="button">⬇️ 导出 JSON</button>
+          <label class="btn tight" style="display:inline-flex;align-items:center;gap:8px;justify-content:center;cursor:pointer">
+            ⬆️ 导入 JSON
+            <input id="fileImport" type="file" accept="application/json" class="sr" />
+          </label>
+        </div>
+
+        <div class="split"></div>
+
+        <div class="row">
+          <button class="btn danger tight" id="btnWipeAll" type="button">🧨 清空全部数据</button>
+          <span class="pill" id="lastSaved">未保存</span>
+        </div>
+
+        <div class="hint">
+          清空全部会删除「收藏句子 + 日记」，不可恢复。<br>
+          想安全一点：先导出，再清空。
+        </div>
+
+        <div class="split"></div>
+
+        <div style="font-weight:900;letter-spacing:.2px;font-size:14px">小彩蛋</div>
+        <div class="hint" style="margin-top:6px">
+          我把这里当成我们的小抽屉：放“喜欢的句子”、放“某天的心情”。<br>
+          清清，今天也要被好好对待。🫶
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制</div>
+
+  <script>
+    // --- SW register (important when directly opening /vault/) ---
+    (function(){
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("../sw.js").catch(()=>{});
+      }
+    })();
+
+    // --- Storage keys ---
+    const K_QUOTES = "sunmoon_vault_quotes_v1";
+    const K_DIARY  = "sunmoon_vault_diary_v1";
+    const K_META   = "sunmoon_vault_meta_v1";
+    const K_DRAFT_Q = "sunmoon_vault_draft_quote_v1";
+    const K_DRAFT_D = "sunmoon_vault_draft_diary_v1";
+
+    // --- Helpers ---
+    const $ = (id)=>document.getElementById(id);
+    const nowISO = ()=> new Date().toISOString();
+    const todayStr = ()=> new Date().toISOString().slice(0,10);
+    const safeParse = (s, fallback)=>{ try { return JSON.parse(s||""); } catch(e){ return fallback; } };
+    const uniq = ()=> Math.random().toString(16).slice(2) + Date.now().toString(16);
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(()=>t.classList.remove("show"), 1200);
+    }
+
+    function toTags(str){
+      return (str||"")
+        .split(",")
+        .map(s=>s.trim())
+        .filter(Boolean)
+        .slice(0, 12);
+    }
+
+    function readState(){
+      const quotes = safeParse(localStorage.getItem(K_QUOTES), []);
+      const diary  = safeParse(localStorage.getItem(K_DIARY), []);
+      const meta   = safeParse(localStorage.getItem(K_META), { lastSaved:null });
+      return { quotes, diary, meta };
+    }
+    function writeState(next){
+      localStorage.setItem(K_QUOTES, JSON.stringify(next.quotes));
+      localStorage.setItem(K_DIARY,  JSON.stringify(next.diary));
+      localStorage.setItem(K_META,   JSON.stringify(next.meta));
+      $("lastSaved").textContent = next.meta?.lastSaved ? ("已保存：" + new Date(next.meta.lastSaved).toLocaleString()) : "未保存";
+      renderAll();
+    }
+
+    // --- Tabs ---
+    function setTab(which){
+      const isQ = which === "quotes";
+      $("tabQuotes").classList.toggle("active", isQ);
+      $("tabDiary").classList.toggle("active", !isQ);
+      $("panelQuotes").style.display = isQ ? "" : "none";
+      $("panelDiary").style.display  = isQ ? "none" : "";
+    }
+    $("tabQuotes").addEventListener("click", ()=>setTab("quotes"));
+    $("tabDiary").addEventListener("click",  ()=>setTab("diary"));
+
+    // --- Drafts (optional but reduces "写了没保存就丢") ---
+    function loadDrafts(){
+      const dq = safeParse(localStorage.getItem(K_DRAFT_Q), null);
+      if (dq){
+        $("qText").value = dq.text || "";
+        $("qNote").value = dq.note || "";
+        $("qTags").value = dq.tags || "";
+      }
+      const dd = safeParse(localStorage.getItem(K_DRAFT_D), null);
+      if (dd){
+        $("dDate").value = dd.date || todayStr();
+        $("dTitle").value = dd.title || "";
+        $("dContent").value = dd.content || "";
+      } else {
+        $("dDate").value = todayStr();
+      }
+    }
+    function saveQuoteDraft(){
+      localStorage.setItem(K_DRAFT_Q, JSON.stringify({
+        text:$("qText").value,
+        note:$("qNote").value,
+        tags:$("qTags").value
+      }));
+    }
+    function saveDiaryDraft(){
+      localStorage.setItem(K_DRAFT_D, JSON.stringify({
+        date:$("dDate").value,
+        title:$("dTitle").value,
+        content:$("dContent").value
+      }));
+    }
+
+    ["qText","qNote","qTags"].forEach(id=>{
+      $(id).addEventListener("input", ()=>{ saveQuoteDraft(); });
+    });
+    ["dDate","dTitle","dContent"].forEach(id=>{
+      $(id).addEventListener("input", ()=>{ saveDiaryDraft(); });
+    });
+
+    $("btnClearQuoteDraft").addEventListener("click", ()=>{
+      $("qText").value=""; $("qNote").value=""; $("qTags").value="";
+      localStorage.removeItem(K_DRAFT_Q);
+      toast("已清空输入");
+    });
+    $("btnClearDiaryDraft").addEventListener("click", ()=>{
+      $("dDate").value=todayStr(); $("dTitle").value=""; $("dContent").value="";
+      localStorage.removeItem(K_DRAFT_D);
+      toast("已清空输入");
+    });
+
+    // --- Quotes ---
+    $("btnAddQuote").addEventListener("click", ()=>{
+      const text = $("qText").value.trim();
+      if (!text){ toast("先写一句"); return; }
+
+      const { quotes, diary, meta } = readState();
+      const item = {
+        id: uniq(),
+        text,
+        note: $("qNote").value.trim(),
+        tags: toTags($("qTags").value),
+        pinned: false,
+        createdAt: nowISO()
+      };
+      quotes.unshift(item);
+      meta.lastSaved = nowISO();
+
+      writeState({ quotes, diary, meta });
+
+      // clear input but keep tags if user wants
+      $("qText").value="";
+      $("qNote").value="";
+      localStorage.removeItem(K_DRAFT_Q);
+      toast("收好啦");
+    });
+
+    function updateQuote(id, patch){
+      const s = readState();
+      const idx = s.quotes.findIndex(q=>q.id===id);
+      if (idx<0) return;
+      s.quotes[idx] = { ...s.quotes[idx], ...patch };
+      s.meta.lastSaved = nowISO();
+      writeState(s);
+    }
+    function deleteQuote(id){
+      const s = readState();
+      s.quotes = s.quotes.filter(q=>q.id!==id);
+      s.meta.lastSaved = nowISO();
+      writeState(s);
+    }
+
+    // --- Diary ---
+    $("btnSaveDiary").addEventListener("click", ()=>{
+      const date = $("dDate").value || todayStr();
+      const content = $("dContent").value.trim();
+      if (!content){ toast("先写一点"); return; }
+
+      const s = readState();
+      const idx = s.diary.findIndex(d=>d.date===date);
+      const base = {
+        id: idx>=0 ? s.diary[idx].id : uniq(),
+        date,
+        title: $("dTitle").value.trim(),
+        content,
+        createdAt: idx>=0 ? s.diary[idx].createdAt : nowISO(),
+        updatedAt: nowISO()
+      };
+      if (idx>=0) s.diary[idx] = base;
+      else s.diary.unshift(base);
+
+      s.meta.lastSaved = nowISO();
+      writeState(s);
+
+      localStorage.removeItem(K_DRAFT_D);
+      toast(idx>=0 ? "已更新" : "已保存");
+    });
+
+    function deleteDiary(id){
+      const s = readState();
+      s.diary = s.diary.filter(d=>d.id!==id);
+      s.meta.lastSaved = nowISO();
+      writeState(s);
+    }
+
+    // --- Render ---
+    function renderAll(){
+      const s = readState();
+
+      // stats
+      const qCount = s.quotes.length;
+      const dCount = s.diary.length;
+      $("statPill").textContent = `句子 ${qCount} · 日记 ${dCount}`;
+      $("lastSaved").textContent = s.meta?.lastSaved ? ("已保存：" + new Date(s.meta.lastSaved).toLocaleString()) : "未保存";
+
+      renderQuotes(s);
+      renderDiary(s);
+    }
+
+    function renderQuotes(s){
+      const kw = $("qSearch").value.trim().toLowerCase();
+      const sort = $("qSort").value;
+
+      let arr = [...s.quotes];
+      if (kw){
+        arr = arr.filter(q=>{
+          const hay = (q.text + " " + (q.note||"") + " " + (q.tags||[]).join(" ")).toLowerCase();
+          return hay.includes(kw);
+        });
+      }
+
+      if (sort === "new") arr.sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+      if (sort === "old") arr.sort((a,b)=> (a.createdAt||"").localeCompare(b.createdAt||""));
+      if (sort === "pinned"){
+        arr.sort((a,b)=>{
+          const ap = a.pinned?1:0, bp=b.pinned?1:0;
+          if (bp!==ap) return bp-ap;
+          return (b.createdAt||"").localeCompare(a.createdAt||"");
+        });
+      }
+
+      const list = $("quoteList");
+      list.innerHTML = "";
+
+      $("quoteEmpty").style.display = (arr.length===0) ? "" : "none";
+
+      for (const q of arr){
+        const el = document.createElement("div");
+        el.className = "item" + (q.pinned ? " pinned" : "");
+        const dt = q.createdAt ? new Date(q.createdAt) : null;
+
+        el.innerHTML = `
+          <div class="itemTop">
+            <div style="flex:1;min-width:0">
+              <div class="itemText">${escapeHtml(q.text)}</div>
+              <div class="meta">
+                <span>${dt ? dt.toLocaleString() : ""}</span>
+                ${q.note ? `<span>· ${escapeHtml(q.note)}</span>` : ""}
+              </div>
+              <div class="meta" style="gap:6px;margin-top:8px">
+                ${(q.tags||[]).map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join("")}
+              </div>
+            </div>
+            <div class="actions">
+              <button class="smallBtn" data-act="copy">复制</button>
+              <button class="smallBtn" data-act="pin">${q.pinned ? "取消置顶" : "置顶"}</button>
+              <button class="smallBtn" data-act="del">删除</button>
+            </div>
+          </div>
+        `;
+
+        el.querySelector('[data-act="copy"]').addEventListener("click", async ()=>{
+          const text = q.note ? `${q.text}\n—— ${q.note}` : q.text;
+          try{
+            await navigator.clipboard.writeText(text);
+            toast("已复制");
+          }catch(e){
+            toast("复制失败");
+          }
+        });
+        el.querySelector('[data-act="pin"]').addEventListener("click", ()=>updateQuote(q.id,{pinned:!q.pinned}));
+        el.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+          if (confirm("删除这条收藏？")) deleteQuote(q.id);
+        });
+
+        list.appendChild(el);
+      }
+    }
+
+    function renderDiary(s){
+      const kw = $("dSearch").value.trim().toLowerCase();
+      const sort = $("dSort").value;
+
+      let arr = [...s.diary];
+      if (kw){
+        arr = arr.filter(d=>{
+          const hay = ((d.title||"") + " " + (d.content||"")).toLowerCase();
+          return hay.includes(kw);
+        });
+      }
+      arr.sort((a,b)=>{
+        const da = a.date||"", db=b.date||"";
+        return sort==="old" ? da.localeCompare(db) : db.localeCompare(da);
+      });
+
+      const list = $("diaryList");
+      list.innerHTML = "";
+
+      $("diaryEmpty").style.display = (arr.length===0) ? "" : "none";
+
+      for (const d of arr){
+        const el = document.createElement("div");
+        el.className = "item";
+        const preview = (d.content||"").replace(/\s+/g," ").slice(0,80);
+
+        el.innerHTML = `
+          <div class="itemTop">
+            <div style="flex:1;min-width:0">
+              <div class="itemText">${escapeHtml(d.date)} ${d.title ? " · " + escapeHtml(d.title) : ""}</div>
+              <div class="meta">
+                <span>${escapeHtml(preview)}${(d.content||"").length>80 ? "…" : ""}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="smallBtn" data-act="load">加载到编辑</button>
+              <button class="smallBtn" data-act="copy">复制</button>
+              <button class="smallBtn" data-act="del">删除</button>
+            </div>
+          </div>
+        `;
+
+        el.querySelector('[data-act="load"]').addEventListener("click", ()=>{
+          $("dDate").value = d.date || todayStr();
+          $("dTitle").value = d.title || "";
+          $("dContent").value = d.content || "";
+          saveDiaryDraft();
+          setTab("diary");
+          toast("已加载");
+          window.scrollTo({top:0, behavior:"smooth"});
+        });
+        el.querySelector('[data-act="copy"]').addEventListener("click", async ()=>{
+          const text = `${d.date}${d.title?(" · "+d.title):""}\n${d.content||""}`;
+          try{
+            await navigator.clipboard.writeText(text);
+            toast("已复制");
+          }catch(e){
+            toast("复制失败");
+          }
+        });
+        el.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+          if (confirm("删除这条日记？")) deleteDiary(d.id);
+        });
+
+        list.appendChild(el);
+      }
+    }
+
+    function escapeHtml(s){
+      return (s||"").replace(/[&<>"']/g, (c)=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    // --- Search / sort events ---
+    $("qSearch").addEventListener("input", renderAll);
+    $("qSort").addEventListener("change", renderAll);
+    $("dSearch").addEventListener("input", renderAll);
+    $("dSort").addEventListener("change", renderAll);
+
+    // --- Export / Import ---
+    $("btnExport").addEventListener("click", ()=>{
+      const s = readState();
+      const data = {
+        app: "SunMoon Vault",
+        version: 1,
+        exportedAt: nowISO(),
+        quotes: s.quotes,
+        diary: s.diary
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sunmoon-vault-backup-${todayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast("已导出");
+    });
+
+    $("fileImport").addEventListener("change", async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try{
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || (!Array.isArray(data.quotes) && !Array.isArray(data.diary))) {
+          toast("文件不对");
+          return;
+        }
+        const s = readState();
+        const mergedQuotes = Array.isArray(data.quotes) ? data.quotes : [];
+        const mergedDiary  = Array.isArray(data.diary) ? data.diary : [];
+
+        // Simple merge: prepend imported, then de-dup by id/date
+        const qById = new Map();
+        [...mergedQuotes, ...s.quotes].forEach(q=>{
+          if (!q || !q.id) return;
+          if (!qById.has(q.id)) qById.set(q.id, q);
+        });
+
+        const dByDate = new Map();
+        [...mergedDiary, ...s.diary].forEach(d=>{
+          if (!d || !d.date) return;
+          // keep newer updatedAt
+          const prev = dByDate.get(d.date);
+          if (!prev) dByDate.set(d.date, d);
+          else {
+            const pu = prev.updatedAt || prev.createdAt || "";
+            const du = d.updatedAt || d.createdAt || "";
+            if (du.localeCompare(pu) > 0) dByDate.set(d.date, d);
+          }
+        });
+
+        s.quotes = Array.from(qById.values()).sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+        s.diary  = Array.from(dByDate.values()).sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+        s.meta.lastSaved = nowISO();
+        writeState(s);
+        toast("已导入");
+      }catch(err){
+        toast("导入失败");
+      }finally{
+        e.target.value = "";
+      }
+    });
+
+    // --- Wipe all ---
+    $("btnWipeAll").addEventListener("click", ()=>{
+      if (!confirm("真的要清空全部吗？建议先导出备份。")) return;
+      localStorage.removeItem(K_QUOTES);
+      localStorage.removeItem(K_DIARY);
+      localStorage.removeItem(K_META);
+      localStorage.removeItem(K_DRAFT_Q);
+      localStorage.removeItem(K_DRAFT_D);
+      toast("已清空");
+      renderAll();
+    });
+
+    // Init
+    loadDrafts();
+    renderAll();
+  </script>
+</body>
+</html>
