@@ -1,7 +1,8 @@
 {
+  "id": "/cycle/vault/",
   "name": "SunMoon Vault · 句子与日记",
   "short_name": "Vault",
-  "description": "本地保存，收藏句子 + 写小日记。|•'-'•)ง",
+  "description": "本地保存，收藏句子 + 写小日记。|•'-'•)9",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
