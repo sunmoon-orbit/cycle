@@ -1,10 +1,17 @@
 /* PWA Service Worker - cute_cycle_tracker */
-const CACHE_NAME = "cute-cycle-cache-2026020601"; // ✅改一个新名字，强制更新
+const CACHE_NAME = "cute-cycle-cache-20260207052850"; // ✅ bump name to force update
 const PRECACHE_URLS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
+
+  // Pages
+  "./draw/index.html",
+  "./draw/manifest.webmanifest",
+  "./vault/index.html",
+
+  // Icons
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -13,7 +20,8 @@ const PRECACHE_URLS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
       .then(() => self.skipWaiting())
   );
@@ -25,7 +33,7 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys.map((k) =>
-          (k.startsWith("cute-cycle-cache-") && k !== CACHE_NAME)
+          k.startsWith("cute-cycle-cache-") && k !== CACHE_NAME
             ? caches.delete(k)
             : Promise.resolve()
         )
@@ -46,18 +54,29 @@ self.addEventListener("fetch", (event) => {
   // Only handle same-origin
   if (url.origin !== self.location.origin) return;
 
-  // ✅ Navigation: network-first, fallback to cache (but cache by *request*, not "./index.html")
   if (isNav(req)) {
+    // Navigation: network-first, fallback to cache (supports multi-page: /, /draw/, /vault/)
     event.respondWith(
       (async () => {
         try {
           const fresh = await fetch(req);
           const cache = await caches.open(CACHE_NAME);
-          await cache.put(req, fresh.clone());     // ✅关键：按当前页面 URL 缓存，防止串台
+          cache.put(req, fresh.clone());
           return fresh;
         } catch (e) {
-          const cached = await caches.match(req);  // ✅关键：按当前页面 URL 取缓存
-          return cached || (await caches.match("./index.html")) || (await caches.match("./"));
+          // Try exact match first
+          let cached = await caches.match(req, { ignoreSearch: true });
+          if (cached) return cached;
+
+          // If it's a folder path like /vault/ or /draw/, try /vault/index.html
+          if (url.pathname.endsWith("/")) {
+            const alt = new Request(url.origin + url.pathname + "index.html");
+            cached = await caches.match(alt, { ignoreSearch: true });
+            if (cached) return cached;
+          }
+
+          // Fallback to root
+          return (await caches.match("./index.html")) || (await caches.match("./"));
         }
       })()
     );
@@ -67,10 +86,13 @@ self.addEventListener("fetch", (event) => {
   // Assets: cache-first, revalidate in background
   event.respondWith(
     (async () => {
-      const cached = await caches.match(req);
+      const cached = await caches.match(req, { ignoreSearch: true });
       const fetchPromise = fetch(req)
         .then((res) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone())).catch(() => {});
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(req, res.clone()))
+            .catch(() => {});
           return res;
         })
         .catch(() => null);
