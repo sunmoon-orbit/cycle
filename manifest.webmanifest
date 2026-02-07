@@ -1,32 +1,16 @@
 {
-  "name": "小月历 · 周期记录器",
-  "short_name": "小月历",
-  "description": "可爱离线周期记录器：记录开始/结束，自动计算周期与经期长度。数据只保存在本地。",
+  "name": "SunMoon",
+  "short_name": "SunMoon",
+  "description": "Sun & Moon: small pages, calm days.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f2ef",
-  "theme_color": "#9aa3b2",
+  "background_color": "#F4F2EF",
+  "theme_color": "#A3B18A",
   "icons": [
-    {
-      "src": "./icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/favicon-32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "./icons/favicon-32.png", "sizes": "32x32", "type": "image/png" }
   ]
 }
