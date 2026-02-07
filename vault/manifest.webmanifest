@@ -1,0 +1,16 @@
+{
+  "name": "SunMoon Vault · 句子与日记",
+  "short_name": "Vault",
+  "description": "本地保存，收藏句子 + 写小日记。|•'-'•)ง",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F2EF",
+  "theme_color": "#A3B18A",
+  "icons": [
+    { "src": "../icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "../icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "../icons/favicon-32.png", "sizes": "32x32", "type": "image/png" }
+  ]
+}
