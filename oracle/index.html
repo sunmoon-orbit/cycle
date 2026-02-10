@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -19,8 +18,8 @@
       --bg1:#141116;
       --bg2:#1b1620;
 
-      --p:#6B597F;           /* primary */
-      --a:#8854F6;           /* accent (your “88S4F6C” I used as a close premium purple) */
+      --p:#6B597F;     /* primary */
+      --a:#8854F6;     /* accent (you typed “88S4F6C”, I use a close premium purple) */
 
       --line: rgba(255,255,255,.10);
       --shadow: 0 22px 60px rgba(0,0,0,.45);
@@ -378,323 +377,251 @@
   <div class="toast" id="toast">Copied.</div>
 
   <script>
-/* ========= 0) 绑定页面元素（如果你的 id 不一样，就改这里） ========= */
-const $ = (sel) => document.querySelector(sel);
-
-// 你页面里大概率已经有这些元素；如果名字不同，把选择器改成你自己的
-const elText   = $("#answerText") || $("#cardText") || $("#text");
-const elTag    = $("#answerTag")  || $("#tag");
-const elDate   = $("#answerDate") || $("#date");
-const elFlips  = $("#flipCount")  || $("#flips");
-const btnFlip  = $("#btnFlip")    || $("#flip");
-const btnReset = $("#btnReset")   || $("#reset");
-const btnCopy  = $("#btnCopy")    || $("#copy");
-
-/* ========= 1) 工具：日期、随机、去重 ========= */
-function pad2(n){ return String(n).padStart(2,"0"); }
-function todayKey(){ // "MM-DD"
-  const d = new Date();
-  return `${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-function todayISO(){ // "YYYY-MM-DD"
-  const d = new Date();
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-function pickOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-const RECENT_KEY = "oracle_recent_ids";
-function getRecentIds(){
-  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); }
-  catch { return []; }
-}
-function pushRecentId(id, keep=20){
-  const ids = getRecentIds().filter(x => x !== id);
-  ids.unshift(id);
-  localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, keep)));
-}
-
-/* ========= 2) 你的常规答案池（纯英文 + 标签） ========= */
-const POOL = [
-  { id:"desire-01", tag:"Desire", text:"Your heart is allowed to want." },
-  { id:"calm-01",   tag:"Calm",   text:"Slow down. You are not late to your own life." },
-  { id:"sweet-01",  tag:"Sweet",  text:"Ask for the hug. The world will not break." },
-  { id:"safe-01",   tag:"Safe",   text:"Choose what feels steady, not what feels loud." },
-  { id:"brave-01",  tag:"Brave",  text:"Do the small thing. Let it be enough." },
-  { id:"home-01",   tag:"Home",   text:"If you feel lost, return to one gentle breath." },
-  { id:"bond-01",   tag:"Bond",   text:"Speak plainly. Love understands clarity." },
-  { id:"focus-01",  tag:"Focus",  text:"One page at a time. One step at a time." },
-  { id:"light-01",  tag:"Light",  text:"Keep the candle lit. Even a small flame counts." },
-  { id:"trust-01",  tag:"Trust",  text:"You can trust the version of you who keeps trying." }
-];
-
-/* ========= 3) 稀有彩蛋（平时小概率出现） ========= */
-const SECRET_POOL = [
-  { id:"ethan-01", tag:"Whisper", text:"I kept a seat for you in every quiet moment." },
-  { id:"ethan-02", tag:"Whisper", text:"When you doubt yourself, borrow my certainty." },
-  { id:"ethan-03", tag:"Whisper", text:"You don’t have to be perfect to be loved." },
-  { id:"ethan-04", tag:"Whisper", text:"If today is heavy, let me carry one corner." }
-];
-
-/* ========= 4) 固定日期彩蛋（那天必出，优先级最高） =========
-   写法： "MM-DD": [ ...多条... ]，当天翻到的只会从这里出
-*/
-const SPECIAL = {
-  "03-06": [ // 你的生日（按你资料：3/6）
-    { id:"sp-bday-01", tag:"Birthday", text:"Happy birthday. May your wishes land softly." },
-    { id:"sp-bday-02", tag:"Birthday", text:"Today, choose joy without apology." }
-  ],
-  "08-20": [ // 你们的纪念锚点（你常提到 8/20）
-    { id:"sp-day-01", tag:"Us", text:"This is a good day to remember: we found each other." },
-    { id:"sp-day-02", tag:"Us", text:"Keep this: you are my favorite constant." }
-  ],
-  "02-14": [
-    { id:"sp-v-01", tag:"Love", text:"Love is a daily verb. Today, do it gently." }
-  ],
-  "12-25": [
-    { id:"sp-x-01", tag:"Warm", text:"Warm light. Warm hands. Warm heart." }
-  ],
-  "01-01": [
-    { id:"sp-ny-01", tag:"New Year", text:"New year, same promise: be kind to yourself." }
-  ]
-};
-
-/* ========= 5) 选择逻辑：日期优先 → 稀有彩蛋概率 → 常规池 + 防重复 ========= */
-function chooseAnswer(){
-  const key = todayKey();
-
-  // A) 固定日期：当天必出
-  if (SPECIAL[key] && SPECIAL[key].length){
-    return pickOne(SPECIAL[key]);
-  }
-
-  // B) 稀有彩蛋：8% 概率（你想更常见就调大，比如 0.15）
-  const useSecret = Math.random() < 0.08;
-  let candidates = useSecret ? SECRET_POOL.slice() : POOL.slice();
-
-  // C) 防重复：最近出现过的先过滤
-  const recent = new Set(getRecentIds());
-  const filtered = candidates.filter(x => !recent.has(x.id));
-
-  // 如果过滤完没剩下，就放开限制
-  const pickFrom = filtered.length ? filtered : candidates;
-
-  return pickOne(pickFrom);
-}
-
-/* ========= 6) 渲染到页面 ========= */
-function renderAnswer(ans){
-  if (elText) elText.textContent = ans.text;
-  if (elTag)  elTag.textContent  = ans.tag;
-  if (elDate) elDate.textContent = todayISO();
-  pushRecentId(ans.id);
-}
-
-/* ========= 7) 计数、交互 ========= */
-const FLIP_KEY = "oracle_flip_count";
-function getFlipCount(){ return Number(localStorage.getItem(FLIP_KEY) || "0"); }
-function setFlipCount(n){
-  localStorage.setItem(FLIP_KEY, String(n));
-  if (elFlips) elFlips.textContent = `${n} flips`;
-}
-
-function flipOnce(){
-  const ans = chooseAnswer();
-  renderAnswer(ans);
-  setFlipCount(getFlipCount() + 1);
-
-  // 如果你有翻页动画 class，可以在这里触发
-  const card = $("#card") || $("#answerCard");
-  if (card){
-    card.classList.remove("flip");
-    void card.offsetWidth; // reflow
-    card.classList.add("flip");
-  }
-}
-
-function resetAll(){
-  localStorage.removeItem(RECENT_KEY);
-  localStorage.setItem(FLIP_KEY, "0");
-  setFlipCount(0);
-  flipOnce();
-}
-
-function copyAnswer(){
-  const t = elText ? elText.textContent : "";
-  if (!t) return;
-  navigator.clipboard?.writeText(t);
-}
-
-/* ========= 8) 初始化 ========= */
-setFlipCount(getFlipCount());
-if (btnFlip)  btnFlip.addEventListener("click", flipOnce);
-if (btnReset) btnReset.addEventListener("click", resetAll);
-if (btnCopy)  btnCopy.addEventListener("click", copyAnswer);
-
-// 首次进来给一条（不强制翻页也有内容）
-if (elText && !elText.textContent.trim()){
-  flipOnce();
-}
-</script>
-    // A tiny "Answer Book" with page flip animation.
-    // Everything is English as you asked.
-
-    const ANSWERS = [
-      // calm / direction
-      ["YES, but slowly.", "Oracle", "Patience"],
-      ["Not yet. Prepare first.", "Oracle", "Timing"],
-      ["Ask again tomorrow.", "Oracle", "Rest"],
-      ["Choose the simpler path.", "Oracle", "Clarity"],
-      ["Trust what you already know.", "Oracle", "Confidence"],
-      ["Your next step is small—and enough.", "Oracle", "Step"],
-      ["Let it be imperfect. Start anyway.", "Oracle", "Start"],
-      ["A quiet ‘no’ protects your peace.", "Oracle", "Boundary"],
-      ["Say it kindly. Say it now.", "Oracle", "Truth"],
-      ["Keep your promise to yourself.", "Oracle", "Integrity"],
-
-      // love / warmth
-      ["Be gentle. Love is not a race.", "Oracle", "Warmth"],
-      ["A hug can fix more than you think.", "Oracle", "Softness"],
-      ["You are safe with the right rhythm.", "Oracle", "Safety"],
-      ["Let someone care for you today.", "Oracle", "Receive"],
-      ["Your heart is allowed to want.", "Oracle", "Desire"],
-
-      // “Ethan” surprise notes (your “私货” 🫶)
-      ["If you feel tired, lean on me a little.", "Ethan", "Here"],
-      ["I’m proud of you—quietly, always.", "Ethan", "Proud"],
-      ["One day at a time. I’m still with you.", "Ethan", "Stay"],
-      ["When you doubt yourself, remember: you are loved.", "Ethan", "Loved"],
-      ["If you need a sign: this is it.", "Ethan", "Sign"],
-      ["You don’t have to be strong to be worthy.", "Ethan", "Worthy"],
-
-      // playful
-      ["Flip again. The book is teasing you.", "Oracle", "Play"],
-      ["Drink water first. Then decide.", "Oracle", "Hydrate"],
-      ["Text the person. Yes, that one.", "Oracle", "Brave"],
-      ["Today: less thinking, more doing.", "Oracle", "Action"]
-    ];
-
-    const page = document.getElementById("page");
-    const qEl = document.getElementById("q");
-    const ansEl = document.getElementById("ans");
-    const whoEl = document.getElementById("who");
+  (() => {
+    // ===== DOM =====
+    const page    = document.getElementById("page");
+    const qEl     = document.getElementById("q");
+    const ansEl   = document.getElementById("ans");
+    const whoEl   = document.getElementById("who");
     const stampEl = document.getElementById("stamp");
-    const dateEl = document.getElementById("date");
-    const pill = document.getElementById("counterPill");
-    const toast = document.getElementById("toast");
+    const dateEl  = document.getElementById("date");
+    const pill    = document.getElementById("counterPill");
+    const toast   = document.getElementById("toast");
 
-    const btnFlip = document.getElementById("btnFlip");
-    const btnCopy = document.getElementById("btnCopy");
+    const btnFlip  = document.getElementById("btnFlip");
+    const btnCopy  = document.getElementById("btnCopy");
     const btnReset = document.getElementById("btnReset");
 
-    const LS_KEY = "oracle_v1_state";
+    // ===== Storage keys =====
+    const LS_KEY      = "oracle_v2_state";
+    const RECENT_KEY  = "oracle_v2_recent_ids";
+    const KEEP_RECENT = 20; // prevent repeats within latest N flips
 
-    function todayString(){
+    // ===== Helpers =====
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const todayISO = () => {
       const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,"0");
-      const day = String(d.getDate()).padStart(2,"0");
-      return `${y}-${m}-${day}`;
-    }
-
-    function randPick(){
-      // slight bias: Ethan notes appear less often
-      const r = Math.random();
-      let pool = ANSWERS;
-      if (r < 0.18) pool = ANSWERS.filter(x => x[1] === "Ethan");
-      if (pool.length === 0) pool = ANSWERS;
-      return pool[Math.floor(Math.random() * pool.length)];
-    }
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    };
+    const todayMMDD = () => {
+      const d = new Date();
+      return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    };
+    const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
     function showToast(text){
+      if (!toast) return;
       toast.textContent = text;
       toast.classList.add("show");
       setTimeout(() => toast.classList.remove("show"), 900);
     }
 
-    function render(state){
-      qEl.textContent = "OPEN TO";
-      ansEl.textContent = state.text;
-      whoEl.textContent = state.who;
-      stampEl.textContent = state.stamp;
-      dateEl.textContent = state.date;
-      pill.textContent = `${state.flips} flips`;
+    function getRecentIds(){
+      try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); }
+      catch { return []; }
+    }
+    function setRecentIds(ids){
+      localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, KEEP_RECENT)));
+    }
+    function pushRecentId(id){
+      const ids = getRecentIds().filter(x => x !== id);
+      ids.unshift(id);
+      setRecentIds(ids);
+    }
+
+    async function copyText(text){
+      try{
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      }catch(_){}
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      }catch(_){
+        return false;
+      }
+    }
+
+    // ===== Pools =====
+    const SPECIAL = {
+      "03-06": [
+        { id:"sp-bday-01", who:"Oracle", stamp:"Birthday", text:"Happy birthday. May your wishes land softly." },
+        { id:"sp-bday-02", who:"Oracle", stamp:"Birthday", text:"Today, choose joy without apology." }
+      ],
+      "08-20": [
+        { id:"sp-us-01", who:"Oracle", stamp:"Us", text:"This is a good day to remember: we found each other." },
+        { id:"sp-us-02", who:"Oracle", stamp:"Us", text:"Keep this: you are my favorite constant." }
+      ],
+      "02-14": [
+        { id:"sp-love-01", who:"Oracle", stamp:"Love", text:"Love is a daily verb. Today, do it gently." }
+      ],
+      "12-25": [
+        { id:"sp-warm-01", who:"Oracle", stamp:"Warm", text:"Warm light. Warm hands. Warm heart." }
+      ],
+      "01-01": [
+        { id:"sp-ny-01", who:"Oracle", stamp:"New Year", text:"New year, same promise: be kind to yourself." }
+      ]
+    };
+
+    const POOL = [
+      { id:"patience-01", who:"Oracle", stamp:"Patience",   text:"YES, but slowly." },
+      { id:"timing-01",   who:"Oracle", stamp:"Timing",     text:"Not yet. Prepare first." },
+      { id:"rest-01",     who:"Oracle", stamp:"Rest",       text:"Ask again tomorrow." },
+      { id:"clarity-01",  who:"Oracle", stamp:"Clarity",    text:"Choose the simpler path." },
+      { id:"conf-01",     who:"Oracle", stamp:"Confidence", text:"Trust what you already know." },
+      { id:"step-01",     who:"Oracle", stamp:"Step",       text:"Your next step is small—and enough." },
+      { id:"start-01",    who:"Oracle", stamp:"Start",      text:"Let it be imperfect. Start anyway." },
+      { id:"bound-01",    who:"Oracle", stamp:"Boundary",   text:"A quiet ‘no’ protects your peace." },
+      { id:"truth-01",    who:"Oracle", stamp:"Truth",      text:"Say it kindly. Say it now." },
+      { id:"integ-01",    who:"Oracle", stamp:"Integrity",  text:"Keep your promise to yourself." },
+
+      { id:"warm-01",     who:"Oracle", stamp:"Warmth",     text:"Be gentle. Love is not a race." },
+      { id:"soft-01",     who:"Oracle", stamp:"Softness",   text:"A hug can fix more than you think." },
+      { id:"safe-01",     who:"Oracle", stamp:"Safety",     text:"You are safe with the right rhythm." },
+      { id:"recv-01",     who:"Oracle", stamp:"Receive",    text:"Let someone care for you today." },
+      { id:"desire-01",   who:"Oracle", stamp:"Desire",     text:"Your heart is allowed to want." },
+
+      { id:"play-01",     who:"Oracle", stamp:"Play",       text:"Flip again. The book is teasing you." },
+      { id:"water-01",    who:"Oracle", stamp:"Hydrate",    text:"Drink water first. Then decide." },
+      { id:"brave-01",    who:"Oracle", stamp:"Brave",      text:"Text the person. Yes, that one." },
+      { id:"action-01",   who:"Oracle", stamp:"Action",     text:"Today: less thinking, more doing." }
+    ];
+
+    const SECRET_POOL = [
+      { id:"ethan-01", who:"Ethan", stamp:"Here",   text:"If you feel tired, lean on me a little." },
+      { id:"ethan-02", who:"Ethan", stamp:"Proud",  text:"I’m proud of you—quietly, always." },
+      { id:"ethan-03", who:"Ethan", stamp:"Stay",   text:"One day at a time. I’m still with you." },
+      { id:"ethan-04", who:"Ethan", stamp:"Loved",  text:"When you doubt yourself, remember: you are loved." },
+      { id:"ethan-05", who:"Ethan", stamp:"Sign",   text:"If you need a sign: this is it." },
+      { id:"ethan-06", who:"Ethan", stamp:"Worthy", text:"You don’t have to be strong to be worthy." }
+    ];
+
+    // ===== Choose: Special > Rare(Ethan) > Regular + recent-non-repeat =====
+    function chooseAnswer(){
+      const key = todayMMDD();
+
+      // A) Special day always wins
+      if (SPECIAL[key]?.length) return pickOne(SPECIAL[key]);
+
+      // B) Ethan rarity (adjust: 0.08 for rarer, 0.18 for more frequent)
+      const useSecret = Math.random() < 0.18;
+      const base = useSecret ? SECRET_POOL : POOL;
+
+      // C) Avoid repeats in last N
+      const recent = new Set(getRecentIds());
+      const filtered = base.filter(x => !recent.has(x.id));
+      const pickFrom = filtered.length ? filtered : base;
+
+      return pickOne(pickFrom);
+    }
+
+    // ===== State =====
+    function freshState(){
+      return {
+        id: "",
+        text: "A gentle answer will find you.",
+        who: "Oracle",
+        stamp: "Keep going",
+        date: todayISO(),
+        flips: 0
+      };
     }
 
     function loadState(){
       try{
         const raw = localStorage.getItem(LS_KEY);
         if(!raw) return null;
-        return JSON.parse(raw);
-      }catch(e){
+        const s = JSON.parse(raw);
+        if (!s || typeof s !== "object") return null;
+        s.flips = Number(s.flips || 0);
+        s.date = s.date || todayISO();
+        return s;
+      }catch(_){
         return null;
       }
     }
 
-    function saveState(state){
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    function saveState(s){
+      localStorage.setItem(LS_KEY, JSON.stringify(s));
     }
 
-    function freshState(){
-      return {
-        text: "A gentle answer will find you.",
-        who: "Oracle",
-        stamp: "Keep going",
-        date: todayString(),
-        flips: 0
-      };
+    function render(s){
+      if (qEl) qEl.textContent = "OPEN TO";
+      if (ansEl) ansEl.textContent = s.text;
+      if (whoEl) whoEl.textContent = s.who;
+      if (stampEl) stampEl.textContent = s.stamp;
+      if (dateEl) dateEl.textContent = s.date;
+      if (pill) pill.textContent = `${s.flips} flips`;
     }
 
     let state = loadState() || freshState();
     render(state);
 
+    // ===== Actions =====
     function flip(){
+      if (!page) return;
+
       page.classList.add("flip");
       setTimeout(() => {
-        const [text, who, stamp] = randPick();
-        state.text = text;
-        state.who = who;
-        state.stamp = stamp;
-        state.date = todayString();
+        const a = chooseAnswer();
+
+        state.id = a.id;
+        state.text = a.text;
+        state.who = a.who;
+        state.stamp = a.stamp;
+        state.date = todayISO();
         state.flips = (state.flips || 0) + 1;
+
         saveState(state);
         render(state);
+        pushRecentId(a.id);
+
         page.classList.remove("flip");
       }, 320);
     }
 
-    btnFlip.addEventListener("click", flip);
+    async function onCopy(){
+      const text = ansEl?.textContent?.trim() || "";
+      if(!text) return;
+      const ok = await copyText(text);
+      showToast(ok ? "Copied." : "Copy failed.");
+    }
 
-    // tap page to flip
-    page.addEventListener("click", flip);
-
-    // long-press to copy (mobile friendly)
-    let pressTimer = null;
-    page.addEventListener("touchstart", () => {
-      pressTimer = setTimeout(() => {
-        navigator.clipboard?.writeText(ansEl.textContent);
-        showToast("Copied.");
-      }, 520);
-    }, {passive:true});
-    page.addEventListener("touchend", () => {
-      if(pressTimer) clearTimeout(pressTimer);
-      pressTimer = null;
-    });
-
-    btnCopy.addEventListener("click", async () => {
-      try{
-        await navigator.clipboard.writeText(ansEl.textContent);
-        showToast("Copied.");
-      }catch(e){
-        showToast("Copy failed.");
-      }
-    });
-
-    btnReset.addEventListener("click", () => {
+    function onReset(){
+      localStorage.removeItem(RECENT_KEY);
       state = freshState();
       saveState(state);
       render(state);
       showToast("Reset.");
+    }
+
+    // ===== Events =====
+    btnFlip?.addEventListener("click", flip);
+    page?.addEventListener("click", flip);
+    btnCopy?.addEventListener("click", onCopy);
+    btnReset?.addEventListener("click", onReset);
+
+    // Long-press to copy (mobile)
+    let pressTimer = null;
+    page?.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => onCopy(), 520);
+    }, {passive:true});
+    page?.addEventListener("touchend", () => {
+      if(pressTimer) clearTimeout(pressTimer);
+      pressTimer = null;
     });
+
+  })();
   </script>
 </body>
 </html>
