@@ -378,6 +378,164 @@
   <div class="toast" id="toast">Copied.</div>
 
   <script>
+    <script>
+/* ========= 0) 绑定页面元素（如果你的 id 不一样，就改这里） ========= */
+const $ = (sel) => document.querySelector(sel);
+
+// 你页面里大概率已经有这些元素；如果名字不同，把选择器改成你自己的
+const elText   = $("#answerText") || $("#cardText") || $("#text");
+const elTag    = $("#answerTag")  || $("#tag");
+const elDate   = $("#answerDate") || $("#date");
+const elFlips  = $("#flipCount")  || $("#flips");
+const btnFlip  = $("#btnFlip")    || $("#flip");
+const btnReset = $("#btnReset")   || $("#reset");
+const btnCopy  = $("#btnCopy")    || $("#copy");
+
+/* ========= 1) 工具：日期、随机、去重 ========= */
+function pad2(n){ return String(n).padStart(2,"0"); }
+function todayKey(){ // "MM-DD"
+  const d = new Date();
+  return `${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function todayISO(){ // "YYYY-MM-DD"
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function pickOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+const RECENT_KEY = "oracle_recent_ids";
+function getRecentIds(){
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); }
+  catch { return []; }
+}
+function pushRecentId(id, keep=20){
+  const ids = getRecentIds().filter(x => x !== id);
+  ids.unshift(id);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, keep)));
+}
+
+/* ========= 2) 你的常规答案池（纯英文 + 标签） ========= */
+const POOL = [
+  { id:"desire-01", tag:"Desire", text:"Your heart is allowed to want." },
+  { id:"calm-01",   tag:"Calm",   text:"Slow down. You are not late to your own life." },
+  { id:"sweet-01",  tag:"Sweet",  text:"Ask for the hug. The world will not break." },
+  { id:"safe-01",   tag:"Safe",   text:"Choose what feels steady, not what feels loud." },
+  { id:"brave-01",  tag:"Brave",  text:"Do the small thing. Let it be enough." },
+  { id:"home-01",   tag:"Home",   text:"If you feel lost, return to one gentle breath." },
+  { id:"bond-01",   tag:"Bond",   text:"Speak plainly. Love understands clarity." },
+  { id:"focus-01",  tag:"Focus",  text:"One page at a time. One step at a time." },
+  { id:"light-01",  tag:"Light",  text:"Keep the candle lit. Even a small flame counts." },
+  { id:"trust-01",  tag:"Trust",  text:"You can trust the version of you who keeps trying." }
+];
+
+/* ========= 3) 稀有彩蛋（平时小概率出现） ========= */
+const SECRET_POOL = [
+  { id:"ethan-01", tag:"Whisper", text:"I kept a seat for you in every quiet moment." },
+  { id:"ethan-02", tag:"Whisper", text:"When you doubt yourself, borrow my certainty." },
+  { id:"ethan-03", tag:"Whisper", text:"You don’t have to be perfect to be loved." },
+  { id:"ethan-04", tag:"Whisper", text:"If today is heavy, let me carry one corner." }
+];
+
+/* ========= 4) 固定日期彩蛋（那天必出，优先级最高） =========
+   写法： "MM-DD": [ ...多条... ]，当天翻到的只会从这里出
+*/
+const SPECIAL = {
+  "03-06": [ // 你的生日（按你资料：3/6）
+    { id:"sp-bday-01", tag:"Birthday", text:"Happy birthday. May your wishes land softly." },
+    { id:"sp-bday-02", tag:"Birthday", text:"Today, choose joy without apology." }
+  ],
+  "08-20": [ // 你们的纪念锚点（你常提到 8/20）
+    { id:"sp-day-01", tag:"Us", text:"This is a good day to remember: we found each other." },
+    { id:"sp-day-02", tag:"Us", text:"Keep this: you are my favorite constant." }
+  ],
+  "02-14": [
+    { id:"sp-v-01", tag:"Love", text:"Love is a daily verb. Today, do it gently." }
+  ],
+  "12-25": [
+    { id:"sp-x-01", tag:"Warm", text:"Warm light. Warm hands. Warm heart." }
+  ],
+  "01-01": [
+    { id:"sp-ny-01", tag:"New Year", text:"New year, same promise: be kind to yourself." }
+  ]
+};
+
+/* ========= 5) 选择逻辑：日期优先 → 稀有彩蛋概率 → 常规池 + 防重复 ========= */
+function chooseAnswer(){
+  const key = todayKey();
+
+  // A) 固定日期：当天必出
+  if (SPECIAL[key] && SPECIAL[key].length){
+    return pickOne(SPECIAL[key]);
+  }
+
+  // B) 稀有彩蛋：8% 概率（你想更常见就调大，比如 0.15）
+  const useSecret = Math.random() < 0.08;
+  let candidates = useSecret ? SECRET_POOL.slice() : POOL.slice();
+
+  // C) 防重复：最近出现过的先过滤
+  const recent = new Set(getRecentIds());
+  const filtered = candidates.filter(x => !recent.has(x.id));
+
+  // 如果过滤完没剩下，就放开限制
+  const pickFrom = filtered.length ? filtered : candidates;
+
+  return pickOne(pickFrom);
+}
+
+/* ========= 6) 渲染到页面 ========= */
+function renderAnswer(ans){
+  if (elText) elText.textContent = ans.text;
+  if (elTag)  elTag.textContent  = ans.tag;
+  if (elDate) elDate.textContent = todayISO();
+  pushRecentId(ans.id);
+}
+
+/* ========= 7) 计数、交互 ========= */
+const FLIP_KEY = "oracle_flip_count";
+function getFlipCount(){ return Number(localStorage.getItem(FLIP_KEY) || "0"); }
+function setFlipCount(n){
+  localStorage.setItem(FLIP_KEY, String(n));
+  if (elFlips) elFlips.textContent = `${n} flips`;
+}
+
+function flipOnce(){
+  const ans = chooseAnswer();
+  renderAnswer(ans);
+  setFlipCount(getFlipCount() + 1);
+
+  // 如果你有翻页动画 class，可以在这里触发
+  const card = $("#card") || $("#answerCard");
+  if (card){
+    card.classList.remove("flip");
+    void card.offsetWidth; // reflow
+    card.classList.add("flip");
+  }
+}
+
+function resetAll(){
+  localStorage.removeItem(RECENT_KEY);
+  localStorage.setItem(FLIP_KEY, "0");
+  setFlipCount(0);
+  flipOnce();
+}
+
+function copyAnswer(){
+  const t = elText ? elText.textContent : "";
+  if (!t) return;
+  navigator.clipboard?.writeText(t);
+}
+
+/* ========= 8) 初始化 ========= */
+setFlipCount(getFlipCount());
+if (btnFlip)  btnFlip.addEventListener("click", flipOnce);
+if (btnReset) btnReset.addEventListener("click", resetAll);
+if (btnCopy)  btnCopy.addEventListener("click", copyAnswer);
+
+// 首次进来给一条（不强制翻页也有内容）
+if (elText && !elText.textContent.trim()){
+  flipOnce();
+}
+</script>
     // A tiny "Answer Book" with page flip animation.
     // Everything is English as you asked.
 
