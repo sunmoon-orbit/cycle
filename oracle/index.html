@@ -19,7 +19,7 @@
       --bg2:#1b1620;
 
       --p:#6B597F;     /* primary */
-      --a:#8854F6;     /* accent (you typed “88S4F6C”, I use a close premium purple) */
+      --a:#8854F6;     /* accent */
 
       --line: rgba(255,255,255,.10);
       --shadow: 0 22px 60px rgba(0,0,0,.45);
@@ -119,6 +119,7 @@
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
+      cursor:pointer;
     }
     .btn:active{transform: translateY(1px)}
     .btn.primary{
@@ -213,11 +214,13 @@
       color: rgba(32,26,37,.92);
       transform-origin: left center;
       transform: rotateY(0deg);
-      transition: transform .55s cubic-bezier(.2,.9,.2,1), filter .55s ease, opacity .2s ease;
+      transition: transform .55s cubic-bezier(.2,.9,.2,1), filter .55s ease;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
       gap: 18px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .page::after{
@@ -314,7 +317,6 @@
     .toast.show{opacity:1; transform: translateX(-50%) translateY(-2px)}
 
     @media (min-width: 820px){
-      .grid{grid-template-columns: 1fr;}
       .pages{min-height: 380px;}
       .ans{font-size: 26px;}
     }
@@ -328,7 +330,7 @@
         <div class="mark"><span>📖</span></div>
         <div class="title">
           <div class="h1">Oracle · Answer Book</div>
-          <div class="sub">Tap to flip a page. Short English, calm and premium.</div>
+          <div class="sub">Tap the page (or Flip). Short English, calm and premium.</div>
         </div>
       </div>
       <div class="actions">
@@ -345,10 +347,11 @@
         </div>
 
         <div class="bookStage">
-          <div class="book" id="book">
+          <div class="book">
             <div class="spine"></div>
+
             <div class="pages" id="pages" aria-label="answer book">
-              <div class="page" id="page">
+              <div class="page" id="page" title="Tap to flip">
                 <div>
                   <div class="q" id="q">OPEN TO</div>
                   <div class="ans" id="ans">A gentle answer will find you.</div>
@@ -377,251 +380,227 @@
   <div class="toast" id="toast">Copied.</div>
 
   <script>
-  (() => {
-    // ===== DOM =====
-    const page    = document.getElementById("page");
-    const qEl     = document.getElementById("q");
-    const ansEl   = document.getElementById("ans");
-    const whoEl   = document.getElementById("who");
-    const stampEl = document.getElementById("stamp");
-    const dateEl  = document.getElementById("date");
-    const pill    = document.getElementById("counterPill");
-    const toast   = document.getElementById("toast");
-
-    const btnFlip  = document.getElementById("btnFlip");
-    const btnCopy  = document.getElementById("btnCopy");
-    const btnReset = document.getElementById("btnReset");
-
-    // ===== Storage keys =====
-    const LS_KEY      = "oracle_v2_state";
-    const RECENT_KEY  = "oracle_v2_recent_ids";
-    const KEEP_RECENT = 20; // prevent repeats within latest N flips
-
-    // ===== Helpers =====
+    // ---------- helpers ----------
+    const $ = (id) => document.getElementById(id);
     const pad2 = (n) => String(n).padStart(2, "0");
-    const todayISO = () => {
+    const today = () => {
       const d = new Date();
-      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-    };
-    const todayMMDD = () => {
-      const d = new Date();
-      return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      return {
+        iso: `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`,
+        md:  `${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`
+      };
     };
     const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-    function showToast(text){
-      if (!toast) return;
-      toast.textContent = text;
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 900);
-    }
+    // ---------- elements ----------
+    const pageEl  = $("page");
+    const ansEl   = $("ans");
+    const whoEl   = $("who");
+    const stampEl = $("stamp");
+    const dateEl  = $("date");
+    const pillEl  = $("counterPill");
+    const toastEl = $("toast");
 
+    const btnFlip  = $("btnFlip");
+    const btnCopy  = $("btnCopy");
+    const btnReset = $("btnReset");
+
+    // ---------- storage keys ----------
+    const STATE_KEY  = "oracle_state_v2";
+    const RECENT_KEY = "oracle_recent_ids_v2";
+
+    // ---------- rarity (make surprises rarer here) ----------
+    const SECRET_PROB = 0.03; // 3% rare surprises
+
+    // ---------- pools ----------
+    const POOL = [
+      { id:"desire-01", who:"Oracle", tag:"Desire",  text:"Your heart is allowed to want." },
+      { id:"calm-01",   who:"Oracle", tag:"Calm",    text:"Slow down. You are not late to your own life." },
+      { id:"sweet-01",  who:"Oracle", tag:"Sweet",   text:"Ask for the hug. The world will not break." },
+      { id:"safe-01",   who:"Oracle", tag:"Safe",    text:"Choose what feels steady, not what feels loud." },
+      { id:"brave-01",  who:"Oracle", tag:"Brave",   text:"Do the small thing. Let it be enough." },
+      { id:"home-01",   who:"Oracle", tag:"Home",    text:"If you feel lost, return to one gentle breath." },
+      { id:"bond-01",   who:"Oracle", tag:"Bond",    text:"Speak plainly. Love understands clarity." },
+      { id:"focus-01",  who:"Oracle", tag:"Focus",   text:"One page at a time. One step at a time." },
+      { id:"light-01",  who:"Oracle", tag:"Light",   text:"Keep the candle lit. Even a small flame counts." },
+      { id:"trust-01",  who:"Oracle", tag:"Trust",   text:"You can trust the version of you who keeps trying." }
+    ];
+
+    const SECRET_POOL = [
+      { id:"ethan-01", who:"Ethan", tag:"Whisper", text:"I kept a seat for you in every quiet moment." },
+      { id:"ethan-02", who:"Ethan", tag:"Whisper", text:"When you doubt yourself, borrow my certainty." },
+      { id:"ethan-03", who:"Ethan", tag:"Whisper", text:"You don’t have to be perfect to be loved." },
+      { id:"ethan-04", who:"Ethan", tag:"Whisper", text:"If today is heavy, let me carry one corner." }
+    ];
+
+    // Fixed-date easter eggs: MM-DD
+    const SPECIAL = {
+      "03-06": [
+        { id:"sp-bday-01", who:"Oracle", tag:"Birthday", text:"Happy birthday. May your wishes land softly." },
+        { id:"sp-bday-02", who:"Oracle", tag:"Birthday", text:"Today, choose joy without apology." }
+      ],
+      "08-20": [
+        { id:"sp-us-01", who:"Oracle", tag:"Us", text:"This is a good day to remember: we found each other." },
+        { id:"sp-us-02", who:"Oracle", tag:"Us", text:"Keep this: you are my favorite constant." }
+      ],
+      "02-14": [
+        { id:"sp-v-01", who:"Oracle", tag:"Love", text:"Love is a daily verb. Today, do it gently." }
+      ],
+      "12-25": [
+        { id:"sp-x-01", who:"Oracle", tag:"Warm", text:"Warm light. Warm hands. Warm heart." }
+      ],
+      "01-01": [
+        { id:"sp-ny-01", who:"Oracle", tag:"New Year", text:"New year, same promise: be kind to yourself." }
+      ]
+    };
+
+    // ---------- recent ids (avoid repeats) ----------
     function getRecentIds(){
       try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); }
       catch { return []; }
     }
-    function setRecentIds(ids){
-      localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, KEEP_RECENT)));
-    }
-    function pushRecentId(id){
+    function pushRecentId(id, keep=20){
       const ids = getRecentIds().filter(x => x !== id);
       ids.unshift(id);
-      setRecentIds(ids);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, keep)));
     }
 
-    async function copyText(text){
+    // ---------- toast ----------
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 900);
+    }
+
+    // ---------- state ----------
+    function loadState(){
       try{
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(text);
-          return true;
-        }
-      }catch(_){}
-      try{
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.setAttribute("readonly", "");
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        const ok = document.execCommand("copy");
-        document.body.removeChild(ta);
-        return ok;
-      }catch(_){
-        return false;
+        const raw = localStorage.getItem(STATE_KEY);
+        if(!raw) return null;
+        return JSON.parse(raw);
+      }catch{
+        return null;
       }
     }
-
-    // ===== Pools =====
-    const SPECIAL = {
-      "03-06": [
-        { id:"sp-bday-01", who:"Oracle", stamp:"Birthday", text:"Happy birthday. May your wishes land softly." },
-        { id:"sp-bday-02", who:"Oracle", stamp:"Birthday", text:"Today, choose joy without apology." }
-      ],
-      "08-20": [
-        { id:"sp-us-01", who:"Oracle", stamp:"Us", text:"This is a good day to remember: we found each other." },
-        { id:"sp-us-02", who:"Oracle", stamp:"Us", text:"Keep this: you are my favorite constant." }
-      ],
-      "02-14": [
-        { id:"sp-love-01", who:"Oracle", stamp:"Love", text:"Love is a daily verb. Today, do it gently." }
-      ],
-      "12-25": [
-        { id:"sp-warm-01", who:"Oracle", stamp:"Warm", text:"Warm light. Warm hands. Warm heart." }
-      ],
-      "01-01": [
-        { id:"sp-ny-01", who:"Oracle", stamp:"New Year", text:"New year, same promise: be kind to yourself." }
-      ]
-    };
-
-    const POOL = [
-      { id:"patience-01", who:"Oracle", stamp:"Patience",   text:"YES, but slowly." },
-      { id:"timing-01",   who:"Oracle", stamp:"Timing",     text:"Not yet. Prepare first." },
-      { id:"rest-01",     who:"Oracle", stamp:"Rest",       text:"Ask again tomorrow." },
-      { id:"clarity-01",  who:"Oracle", stamp:"Clarity",    text:"Choose the simpler path." },
-      { id:"conf-01",     who:"Oracle", stamp:"Confidence", text:"Trust what you already know." },
-      { id:"step-01",     who:"Oracle", stamp:"Step",       text:"Your next step is small—and enough." },
-      { id:"start-01",    who:"Oracle", stamp:"Start",      text:"Let it be imperfect. Start anyway." },
-      { id:"bound-01",    who:"Oracle", stamp:"Boundary",   text:"A quiet ‘no’ protects your peace." },
-      { id:"truth-01",    who:"Oracle", stamp:"Truth",      text:"Say it kindly. Say it now." },
-      { id:"integ-01",    who:"Oracle", stamp:"Integrity",  text:"Keep your promise to yourself." },
-
-      { id:"warm-01",     who:"Oracle", stamp:"Warmth",     text:"Be gentle. Love is not a race." },
-      { id:"soft-01",     who:"Oracle", stamp:"Softness",   text:"A hug can fix more than you think." },
-      { id:"safe-01",     who:"Oracle", stamp:"Safety",     text:"You are safe with the right rhythm." },
-      { id:"recv-01",     who:"Oracle", stamp:"Receive",    text:"Let someone care for you today." },
-      { id:"desire-01",   who:"Oracle", stamp:"Desire",     text:"Your heart is allowed to want." },
-
-      { id:"play-01",     who:"Oracle", stamp:"Play",       text:"Flip again. The book is teasing you." },
-      { id:"water-01",    who:"Oracle", stamp:"Hydrate",    text:"Drink water first. Then decide." },
-      { id:"brave-01",    who:"Oracle", stamp:"Brave",      text:"Text the person. Yes, that one." },
-      { id:"action-01",   who:"Oracle", stamp:"Action",     text:"Today: less thinking, more doing." }
-    ];
-
-    const SECRET_POOL = [
-      { id:"ethan-01", who:"Ethan", stamp:"Here",   text:"If you feel tired, lean on me a little." },
-      { id:"ethan-02", who:"Ethan", stamp:"Proud",  text:"I’m proud of you—quietly, always." },
-      { id:"ethan-03", who:"Ethan", stamp:"Stay",   text:"One day at a time. I’m still with you." },
-      { id:"ethan-04", who:"Ethan", stamp:"Loved",  text:"When you doubt yourself, remember: you are loved." },
-      { id:"ethan-05", who:"Ethan", stamp:"Sign",   text:"If you need a sign: this is it." },
-      { id:"ethan-06", who:"Ethan", stamp:"Worthy", text:"You don’t have to be strong to be worthy." }
-    ];
-
-    // ===== Choose: Special > Rare(Ethan) > Regular + recent-non-repeat =====
-    function chooseAnswer(){
-      const key = todayMMDD();
-
-      // A) Special day always wins
-      if (SPECIAL[key]?.length) return pickOne(SPECIAL[key]);
-
-      // B) Ethan rarity (adjust: 0.08 for rarer, 0.18 for more frequent)
-      const useSecret = Math.random() < 0.18;
-      const base = useSecret ? SECRET_POOL : POOL;
-
-      // C) Avoid repeats in last N
-      const recent = new Set(getRecentIds());
-      const filtered = base.filter(x => !recent.has(x.id));
-      const pickFrom = filtered.length ? filtered : base;
-
-      return pickOne(pickFrom);
+    function saveState(st){
+      localStorage.setItem(STATE_KEY, JSON.stringify(st));
     }
-
-    // ===== State =====
     function freshState(){
+      const t = today();
       return {
-        id: "",
+        id: "init",
         text: "A gentle answer will find you.",
         who: "Oracle",
-        stamp: "Keep going",
-        date: todayISO(),
+        tag: "Keep going",
+        date: t.iso,
         flips: 0
       };
     }
 
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(LS_KEY);
-        if(!raw) return null;
-        const s = JSON.parse(raw);
-        if (!s || typeof s !== "object") return null;
-        s.flips = Number(s.flips || 0);
-        s.date = s.date || todayISO();
-        return s;
-      }catch(_){
-        return null;
+    function render(st){
+      ansEl.textContent = st.text;
+      whoEl.textContent = st.who;
+      stampEl.textContent = st.tag;
+      dateEl.textContent = st.date;
+      pillEl.textContent = `${st.flips} flips`;
+    }
+
+    function chooseAnswer(){
+      const t = today();
+
+      // A) fixed-date
+      if (SPECIAL[t.md] && SPECIAL[t.md].length){
+        return pickOne(SPECIAL[t.md]);
       }
+
+      // B) rare secrets
+      let candidates = (Math.random() < SECRET_PROB) ? SECRET_POOL.slice() : POOL.slice();
+
+      // C) avoid repeats
+      const recent = new Set(getRecentIds());
+      const filtered = candidates.filter(x => !recent.has(x.id));
+      const pickFrom = filtered.length ? filtered : candidates;
+
+      return pickOne(pickFrom);
     }
 
-    function saveState(s){
-      localStorage.setItem(LS_KEY, JSON.stringify(s));
-    }
-
-    function render(s){
-      if (qEl) qEl.textContent = "OPEN TO";
-      if (ansEl) ansEl.textContent = s.text;
-      if (whoEl) whoEl.textContent = s.who;
-      if (stampEl) stampEl.textContent = s.stamp;
-      if (dateEl) dateEl.textContent = s.date;
-      if (pill) pill.textContent = `${s.flips} flips`;
-    }
-
-    let state = loadState() || freshState();
-    render(state);
-
-    // ===== Actions =====
-    function flip(){
-      if (!page) return;
-
-      page.classList.add("flip");
+    function animateFlipThen(fn){
+      pageEl.classList.add("flip");
       setTimeout(() => {
-        const a = chooseAnswer();
-
-        state.id = a.id;
-        state.text = a.text;
-        state.who = a.who;
-        state.stamp = a.stamp;
-        state.date = todayISO();
-        state.flips = (state.flips || 0) + 1;
-
-        saveState(state);
-        render(state);
-        pushRecentId(a.id);
-
-        page.classList.remove("flip");
+        fn();
+        pageEl.classList.remove("flip");
       }, 320);
     }
 
-    async function onCopy(){
-      const text = ansEl?.textContent?.trim() || "";
-      if(!text) return;
-      const ok = await copyText(text);
-      showToast(ok ? "Copied." : "Copy failed.");
+    function flipOnce(){
+      const ans = chooseAnswer();
+      animateFlipThen(() => {
+        const t = today();
+        state.id = ans.id;
+        state.text = ans.text;
+        state.who = ans.who;
+        state.tag = ans.tag;
+        state.date = t.iso;
+        state.flips = (state.flips || 0) + 1;
+
+        pushRecentId(ans.id);
+        saveState(state);
+        render(state);
+      });
     }
 
-    function onReset(){
+    function resetAll(){
       localStorage.removeItem(RECENT_KEY);
+      localStorage.removeItem(STATE_KEY);
       state = freshState();
       saveState(state);
       render(state);
-      showToast("Reset.");
+      toast("Reset.");
     }
 
-    // ===== Events =====
-    btnFlip?.addEventListener("click", flip);
-    page?.addEventListener("click", flip);
-    btnCopy?.addEventListener("click", onCopy);
-    btnReset?.addEventListener("click", onReset);
+    async function copyAnswer(){
+      const text = ansEl.textContent || "";
+      if (!text.trim()) return;
+      try{
+        await navigator.clipboard.writeText(text);
+        toast("Copied.");
+      }catch{
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); toast("Copied."); }
+        catch { toast("Copy failed."); }
+        document.body.removeChild(ta);
+      }
+    }
 
-    // Long-press to copy (mobile)
+    // ---------- init ----------
+    let state = loadState() || freshState();
+    // keep date fresh each day
+    const t = today();
+    state.date = t.iso;
+    saveState(state);
+    render(state);
+
+    btnFlip.addEventListener("click", flipOnce);
+    pageEl.addEventListener("click", flipOnce);
+
+    // long-press to copy (mobile)
     let pressTimer = null;
-    page?.addEventListener("touchstart", () => {
-      pressTimer = setTimeout(() => onCopy(), 520);
+    pageEl.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => { copyAnswer(); }, 520);
     }, {passive:true});
-    page?.addEventListener("touchend", () => {
+    pageEl.addEventListener("touchend", () => {
       if(pressTimer) clearTimeout(pressTimer);
       pressTimer = null;
     });
 
-  })();
+    btnCopy.addEventListener("click", copyAnswer);
+    btnReset.addEventListener("click", resetAll);
   </script>
 </body>
 </html>
