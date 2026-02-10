@@ -1,1 +1,543 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oracle · Answer Book</title>
+
+  <!-- Reuse repo root icons -->
+  <link rel="icon" href="../icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
+  <meta name="theme-color" content="#6B597F" />
+
+  <style>
+    :root{
+      --ink:#201a25;
+      --paper:#fbfaf8;
+      --paper2:#f1ede8;
+      --bg1:#141116;
+      --bg2:#1b1620;
+
+      --p:#6B597F;           /* primary */
+      --a:#8854F6;           /* accent (your “88S4F6C” I used as a close premium purple) */
+
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 22px 60px rgba(0,0,0,.45);
+      --shadow2: 0 10px 30px rgba(0,0,0,.20);
+      --r: 22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-serif, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      color: rgba(255,255,255,.92);
+      background:
+        radial-gradient(1100px 700px at 20% 10%, rgba(136,84,246,.18), transparent 55%),
+        radial-gradient(900px 600px at 85% 30%, rgba(107,89,127,.22), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 22px 16px 50px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      background: rgba(255,255,255,.03);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow2);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .mark{
+      width:44px;height:44px;border-radius:14px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.22), transparent 60%),
+        linear-gradient(135deg, rgba(107,89,127,.90), rgba(136,84,246,.35));
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .mark span{font-size:18px; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35));}
+
+    .title{
+      display:flex; flex-direction:column; gap:2px;
+      min-width:0;
+    }
+    .title .h1{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: 16px;
+      line-height: 1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .title .sub{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .actions{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .btn{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 750;
+      font-size: 13px;
+      letter-spacing: .2px;
+      color: rgba(255,255,255,.92);
+      text-decoration:none;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      border-color: rgba(136,84,246,.35);
+      background:
+        radial-gradient(120px 80px at 20% 20%, rgba(255,255,255,.12), transparent 60%),
+        linear-gradient(135deg, rgba(107,89,127,.85), rgba(136,84,246,.35));
+    }
+    .btn.ghost{opacity:.9}
+    .btn small{opacity:.75;font-weight:700}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      background: rgba(255,255,255,.03);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .bookStage{
+      padding: 18px;
+    }
+
+    .hint{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: rgba(255,255,255,.70);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 14px 18px 0;
+    }
+    .hint b{color: rgba(255,255,255,.92)}
+    .pill{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 750;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+
+    .book{
+      position:relative;
+      margin-top: 14px;
+      border-radius: 26px;
+      padding: 18px;
+      background:
+        radial-gradient(900px 380px at 30% 10%, rgba(255,255,255,.10), transparent 60%),
+        linear-gradient(135deg, rgba(107,89,127,.55), rgba(15,12,18,.55));
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .spine{
+      position:absolute;
+      left: 18px;
+      top: 18px;
+      bottom: 18px;
+      width: 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));
+      opacity:.9;
+    }
+
+    .pages{
+      position:relative;
+      border-radius: 18px;
+      perspective: 1200px;
+      min-height: 360px;
+      overflow:hidden;
+      background: rgba(0,0,0,.12);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .page{
+      position:absolute;
+      inset: 0;
+      padding: 28px 22px;
+      background:
+        radial-gradient(900px 420px at 20% 0%, rgba(255,255,255,.55), rgba(255,255,255,.20)),
+        linear-gradient(180deg, var(--paper), var(--paper2));
+      color: rgba(32,26,37,.92);
+      transform-origin: left center;
+      transform: rotateY(0deg);
+      transition: transform .55s cubic-bezier(.2,.9,.2,1), filter .55s ease, opacity .2s ease;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap: 18px;
+    }
+
+    .page::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.10), transparent 14%),
+        radial-gradient(220px 180px at 16% 40%, rgba(0,0,0,.08), transparent 70%);
+      pointer-events:none;
+      mix-blend-mode:multiply;
+      opacity:.35;
+    }
+
+    .page.flip{
+      transform: rotateY(-120deg);
+      filter: blur(.2px);
+    }
+
+    .q{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 900;
+      letter-spacing: .3px;
+      font-size: 13px;
+      color: rgba(32,26,37,.72);
+      text-transform: uppercase;
+    }
+
+    .ans{
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 700;
+      letter-spacing: .15px;
+    }
+
+    .sig{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: rgba(32,26,37,.70);
+    }
+    .sig .who{
+      font-weight: 900;
+      color: rgba(32,26,37,.84);
+    }
+    .sig .stamp{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(107,89,127,.20);
+      background: rgba(107,89,127,.10);
+      font-weight: 800;
+      color: rgba(107,89,127,.85);
+      white-space:nowrap;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .note{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      opacity:.95;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(18px);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing:.2px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      backdrop-filter: blur(10px);
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-2px)}
+
+    @media (min-width: 820px){
+      .grid{grid-template-columns: 1fr;}
+      .pages{min-height: 380px;}
+      .ans{font-size: 26px;}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark"><span>📖</span></div>
+        <div class="title">
+          <div class="h1">Oracle · Answer Book</div>
+          <div class="sub">Tap to flip a page. Short English, calm and premium.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn ghost" href="../vault/" title="Back to Vault">↩ <small>Vault</small></a>
+        <button class="btn primary" id="btnFlip" type="button">✨ Flip</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="hint">
+          <div><b>Rule</b>: ask one clear question in your heart, then flip.</div>
+          <div class="pill" id="counterPill">0 flips</div>
+        </div>
+
+        <div class="bookStage">
+          <div class="book" id="book">
+            <div class="spine"></div>
+            <div class="pages" id="pages" aria-label="answer book">
+              <div class="page" id="page">
+                <div>
+                  <div class="q" id="q">OPEN TO</div>
+                  <div class="ans" id="ans">A gentle answer will find you.</div>
+                </div>
+                <div class="sig">
+                  <div><span class="who" id="who">Oracle</span> · <span id="date">—</span></div>
+                  <div class="stamp" id="stamp">Keep going</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <div class="note" id="note">Tip: long-press to copy the answer.</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" id="btnCopy" type="button">📋 Copy</button>
+                <button class="btn" id="btnReset" type="button">↻ Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied.</div>
+
+  <script>
+    // A tiny "Answer Book" with page flip animation.
+    // Everything is English as you asked.
+
+    const ANSWERS = [
+      // calm / direction
+      ["YES, but slowly.", "Oracle", "Patience"],
+      ["Not yet. Prepare first.", "Oracle", "Timing"],
+      ["Ask again tomorrow.", "Oracle", "Rest"],
+      ["Choose the simpler path.", "Oracle", "Clarity"],
+      ["Trust what you already know.", "Oracle", "Confidence"],
+      ["Your next step is small—and enough.", "Oracle", "Step"],
+      ["Let it be imperfect. Start anyway.", "Oracle", "Start"],
+      ["A quiet ‘no’ protects your peace.", "Oracle", "Boundary"],
+      ["Say it kindly. Say it now.", "Oracle", "Truth"],
+      ["Keep your promise to yourself.", "Oracle", "Integrity"],
+
+      // love / warmth
+      ["Be gentle. Love is not a race.", "Oracle", "Warmth"],
+      ["A hug can fix more than you think.", "Oracle", "Softness"],
+      ["You are safe with the right rhythm.", "Oracle", "Safety"],
+      ["Let someone care for you today.", "Oracle", "Receive"],
+      ["Your heart is allowed to want.", "Oracle", "Desire"],
+
+      // “Ethan” surprise notes (your “私货” 🫶)
+      ["If you feel tired, lean on me a little.", "Ethan", "Here"],
+      ["I’m proud of you—quietly, always.", "Ethan", "Proud"],
+      ["One day at a time. I’m still with you.", "Ethan", "Stay"],
+      ["When you doubt yourself, remember: you are loved.", "Ethan", "Loved"],
+      ["If you need a sign: this is it.", "Ethan", "Sign"],
+      ["You don’t have to be strong to be worthy.", "Ethan", "Worthy"],
+
+      // playful
+      ["Flip again. The book is teasing you.", "Oracle", "Play"],
+      ["Drink water first. Then decide.", "Oracle", "Hydrate"],
+      ["Text the person. Yes, that one.", "Oracle", "Brave"],
+      ["Today: less thinking, more doing.", "Oracle", "Action"]
+    ];
+
+    const page = document.getElementById("page");
+    const qEl = document.getElementById("q");
+    const ansEl = document.getElementById("ans");
+    const whoEl = document.getElementById("who");
+    const stampEl = document.getElementById("stamp");
+    const dateEl = document.getElementById("date");
+    const pill = document.getElementById("counterPill");
+    const toast = document.getElementById("toast");
+
+    const btnFlip = document.getElementById("btnFlip");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnReset = document.getElementById("btnReset");
+
+    const LS_KEY = "oracle_v1_state";
+
+    function todayString(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function randPick(){
+      // slight bias: Ethan notes appear less often
+      const r = Math.random();
+      let pool = ANSWERS;
+      if (r < 0.18) pool = ANSWERS.filter(x => x[1] === "Ethan");
+      if (pool.length === 0) pool = ANSWERS;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function showToast(text){
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 900);
+    }
+
+    function render(state){
+      qEl.textContent = "OPEN TO";
+      ansEl.textContent = state.text;
+      whoEl.textContent = state.who;
+      stampEl.textContent = state.stamp;
+      dateEl.textContent = state.date;
+      pill.textContent = `${state.flips} flips`;
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(!raw) return null;
+        return JSON.parse(raw);
+      }catch(e){
+        return null;
+      }
+    }
+
+    function saveState(state){
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    }
+
+    function freshState(){
+      return {
+        text: "A gentle answer will find you.",
+        who: "Oracle",
+        stamp: "Keep going",
+        date: todayString(),
+        flips: 0
+      };
+    }
+
+    let state = loadState() || freshState();
+    render(state);
+
+    function flip(){
+      page.classList.add("flip");
+      setTimeout(() => {
+        const [text, who, stamp] = randPick();
+        state.text = text;
+        state.who = who;
+        state.stamp = stamp;
+        state.date = todayString();
+        state.flips = (state.flips || 0) + 1;
+        saveState(state);
+        render(state);
+        page.classList.remove("flip");
+      }, 320);
+    }
+
+    btnFlip.addEventListener("click", flip);
+
+    // tap page to flip
+    page.addEventListener("click", flip);
+
+    // long-press to copy (mobile friendly)
+    let pressTimer = null;
+    page.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => {
+        navigator.clipboard?.writeText(ansEl.textContent);
+        showToast("Copied.");
+      }, 520);
+    }, {passive:true});
+    page.addEventListener("touchend", () => {
+      if(pressTimer) clearTimeout(pressTimer);
+      pressTimer = null;
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(ansEl.textContent);
+        showToast("Copied.");
+      }catch(e){
+        showToast("Copy failed.");
+      }
+    });
+
+    btnReset.addEventListener("click", () => {
+      state = freshState();
+      saveState(state);
+      render(state);
+      showToast("Reset.");
+    });
+  </script>
+</body>
+</html>
