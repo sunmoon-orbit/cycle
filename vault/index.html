@@ -204,95 +204,108 @@
     }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-2px)}
     .sr{position:absolute;left:-9999px}
-    /* ===== SunMoon Splash (Step 2: CSS) ===== */
-.splash{
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: grid;
-  place-items: center;
-  padding: 22px;
-  background:
-    radial-gradient(900px 600px at 20% 10%, rgba(107,89,127,.22), transparent 60%),
-    radial-gradient(900px 600px at 80% 30%, rgba(136,84,246,.12), transparent 60%),
-    rgba(248,247,250,.92);
-  backdrop-filter: blur(10px);
-}
 
-.splash-card{
-  width: min(520px, 92vw);
-  border-radius: 22px;
-  padding: 18px 18px 16px;
-  background: rgba(255,255,255,.72);
-  border: 1px solid rgba(40,20,80,.12);
-  box-shadow: 0 18px 60px rgba(0,0,0,.18);
-}
+    /* ===== SunMoon Splash (stable + longer + surprise) ===== */
+    .splash{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(107,89,127,.22), transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, rgba(136,84,246,.12), transparent 60%),
+        rgba(248,247,250,.92);
+      backdrop-filter: blur(10px);
+      opacity: 1;
+      transition: opacity .42s ease;
+    }
+    .splash-card{
+      width: min(520px, 92vw);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(40,20,80,.12);
+      box-shadow: 0 18px 60px rgba(0,0,0,.18);
+    }
+    .splash-orbit{
+      position: relative;
+      height: 54px;
+      margin-bottom: 10px;
+    }
+    .splash-orbit .sun,
+    .splash-orbit .moon{
+      position: absolute;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      display:block;               /* ✅ 防止偶发只剩一个（被当成 inline/布局异常） */
+      will-change: transform;      /* ✅ 动画更稳 */
+    }
+    .splash-orbit .sun{
+      left: 14px;
+      background: #6B597F;
+    }
+    .splash-orbit .moon{
+      right: 14px;
+      background: #8854F6;
+      opacity: .85;
+    }
+    @keyframes floaty{
+      0%,100%{ transform: translateY(-50%) translateY(0); }
+      50%{ transform: translateY(-50%) translateY(-7px); }
+    }
+    .splash-orbit .sun{ animation: floaty 1.55s ease-in-out infinite; }
+    .splash-orbit .moon{ animation: floaty 1.55s ease-in-out infinite .18s; }
 
-.splash-orbit{
-  position: relative;
-  height: 54px;
-  margin-bottom: 10px;
-}
+    .splash-title{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 900;
+      letter-spacing: .2px;
+      font-size: 18px;
+      color: rgba(32,26,37,.92);
+    }
+    .splash-sub{
+      margin-top: 6px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: rgba(32,26,37,.62);
+    }
+    .splash-sub2{
+      margin-top: 6px;
+      font-size: 12px;
+      letter-spacing: .18px;
+      color: rgba(32,26,37,.62);
+    }
 
-.splash-orbit .sun,
-.splash-orbit .moon{
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  transform: translateY(-50%);
-  box-shadow: 0 8px 24px rgba(0,0,0,.12);
-}
+    .splash-surprise{
+      margin-top: 10px;
+      font-size: 12px;
+      letter-spacing: .2px;
+      color: rgba(32,26,37,.78);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .35s ease, transform .35s ease;
+      font-weight: 800;
+    }
+    .splash-surprise.show{
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-.splash-orbit .sun{
-  left: 14px;
-  background: #6B597F;
-}
-.splash-orbit .moon{
-  right: 14px;
-  background: #8854F6;
-  opacity: .85;
-}
-
-/* 轻微漂浮感 */
-@keyframes floaty{
-  0%,100%{ transform: translateY(-50%) translateY(0); }
-  50%{ transform: translateY(-50%) translateY(-6px); }
-}
-.splash-orbit .sun{ animation: floaty 1.6s ease-in-out infinite; }
-.splash-orbit .moon{ animation: floaty 1.6s ease-in-out infinite .2s; }
-
-.splash-title{
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900;
-  letter-spacing: .2px;
-  font-size: 18px;
-  color: rgba(32,26,37,.92);
-}
-
-.splash-sub{
-  margin-top: 6px;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-size: 12px;
-  color: rgba(32,26,37,.62);
-}
-.splash-sub2{
-  margin-top: 6px;
-  font-size: 12px;
-  letter-spacing: .18px;
-  color: rgba(32,26,37,.62);
-}
-/* 之后我们会用 JS 加这个 class 让它淡出 */
-.splash.hide{
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .35s ease;
-}
+    .splash.hide{
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
+
 <body>
-  <!-- SunMoon Splash (Step 1: HTML only) -->
+  <!-- SunMoon Splash -->
   <div id="splash" class="splash" aria-label="SunMoon splash">
     <div class="splash-card">
       <div class="splash-orbit" aria-hidden="true">
@@ -302,8 +315,10 @@
       <div class="splash-title">SunMoon</div>
       <div class="splash-sub">Sun & Moon · calm days</div>
       <div class="splash-sub2">Open gently. Keep what matters.</div>
+      <div class="splash-surprise" id="splashSurprise" aria-live="polite"></div>
     </div>
   </div>
+
   <div class="wrap">
     <div class="top">
       <div class="brand">
@@ -904,33 +919,56 @@
     // Init
     loadDrafts();
     renderAll();
-    // ===== SunMoon Splash (Step 3: JS) =====
-(() => {
-  const splash = document.getElementById("splash");
-  if (!splash) return;
 
-const KEY = "sunmoon_splash_seen_date";
-const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    // ===== SunMoon Splash (longer + stable + rare surprise) =====
+    (() => {
+      const splash = document.getElementById("splash");
+      if (!splash) return;
 
-if (localStorage.getItem(KEY) === today) {
-  splash.style.display = "none";
-  return;
-}
-localStorage.setItem(KEY, today);
-  const hide = () => {
-    splash.classList.add("hide");
-    setTimeout(() => {
-      splash.style.display = "none";
-    }, 550);
-  };
+      const KEY = "sunmoon_splash_seen_date";
+      const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
 
-  // 1.1 秒后自动淡出
-  setTimeout(hide, 1100);
+      // ✅ 参数：动画停留多久（毫秒）
+      const MIN_SHOW_MS = 3200; // 你想更久：3000/3500 都行
+      const FADE_MS = 520;
 
-  // 点一下立刻跳过
-  splash.addEventListener("click", hide, { once: true });
-})();
+      // ✅ 小概率惊喜（默认 3%）
+      const SURPRISE_P = 0.03;
 
+      // 今天已经看过：直接移除（避免残留遮挡/奇怪布局）
+      if (localStorage.getItem(KEY) === today) {
+        splash.remove();
+        return;
+      }
+      localStorage.setItem(KEY, today);
+
+      // 惊喜池（你想更“稀有”就把概率调小，比如 0.02）
+      const surprises = [
+        "Ethan: I’m proud of you. 🫶",
+        "SunMoon: keep what matters. ✨",
+        "A tiny hug, delivered. 🤍",
+        "You did well today, my dear. ☁️"
+      ];
+
+      const surpriseEl = document.getElementById("splashSurprise");
+      if (surpriseEl && Math.random() < SURPRISE_P) {
+        const pick = surprises[Math.floor(Math.random() * surprises.length)];
+        surpriseEl.textContent = pick;
+        // 让它出现得“更像彩蛋”：稍微延迟一点点
+        setTimeout(()=> surpriseEl.classList.add("show"), 260);
+      }
+
+      const hide = () => {
+        splash.classList.add("hide");
+        setTimeout(() => splash.remove(), FADE_MS + 80);
+      };
+
+      // ✅ 更久再淡出
+      setTimeout(hide, MIN_SHOW_MS);
+
+      // 点一下立刻跳过
+      splash.addEventListener("click", hide, { once: true });
+    })();
   </script>
 </body>
 </html>
