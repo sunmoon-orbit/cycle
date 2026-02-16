@@ -1020,19 +1020,21 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     }
     init();
   
-</script>
+<!-- Service Worker -->
+<script>
+  (function () {
+    if (!("serviceWorker" in navigator)) return;
 
-  <!-- Service Worker -->
-  <script>
-    (function(){
-      if (!('serviceWorker' in navigator)) return;
-      window.addEventListener('load', function(){
-        navigator.serviceWorker.register('./sw.js').catch(function(err){
-          console.warn('[PWA] SW register failed', err);
+    window.addEventListener("load", function () {
+      // 改动 sw.js 时，只要把 v= 后面的版本号改一下，就能强制让手机更新 SW
+      navigator.serviceWorker
+        .register("./sw.js?v=20260216-03", { scope: "./" })
+        .catch(function (err) {
+          console.warn("[PWA] SW register failed", err);
         });
-      });
-    })();
-  </script>
+    });
+  })();
+</script>
 
 </body>
 </html>
