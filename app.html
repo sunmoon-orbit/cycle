@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>SunMoon · Home</title>
-
   <meta name="theme-color" content="#A3B18A" />
-  <link rel="manifest" href="./manifest.webmanifest" />
+
   <link rel="icon" href="./icons/favicon-32.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
 
   <style>
     :root{
@@ -25,12 +25,17 @@
     .h1{font-weight:800;font-size:18px}
     .sub{color:var(--muted);font-size:13px;margin-top:2px}
     .grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+
     a.btn{display:flex;align-items:center;justify-content:space-between;gap:10px;
       padding:14px 14px;border-radius:18px;background:#fff;border:1px solid var(--line);
       text-decoration:none;color:var(--ink);font-weight:700}
     a.btn .tag{color:var(--muted);font-weight:600}
     a.btn:active{transform:translateY(1px)}
-    @media (min-width:700px){.grid{grid-template-columns:1fr 1fr}}
+
+    @media (min-width:700px){
+      .grid{grid-template-columns:1fr 1fr}
+      .grid a.btn:last-child{grid-column:1 / -1} /* ✅ 第三个按钮居中横跨两列 */
+    }
   </style>
 </head>
 
