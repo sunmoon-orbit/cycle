@@ -1,10 +1,11 @@
-/* SunMoon Cycle PWA SW (fixed: app.html as shell + root navigation) */
-const CACHE_NAME = "sunmoon-cycle-cache-20260216-01";
+/* SunMoon PWA Service Worker (safe precache + correct navigation caching) */
+
+const CACHE_NAME = "sunmoon-cycle-20260216-02";
 const APP_SHELL = "./app.html";
 
 const PRECACHE_URLS = [
   "./",
-  "./app.html",                 // ✅ 新增：把主菜单页预缓存
+  "./app.html",
   "./index.html",
   "./manifest.webmanifest",
 
@@ -14,18 +15,19 @@ const PRECACHE_URLS = [
   "./icons/icon-512.png",
 
   "./draw/index.html",
-  "./vault/index.html",
-  "./oracle/index.html",
-
   "./draw/manifest.webmanifest",
+
+  "./vault/index.html",
   "./vault/manifest.webmanifest",
-  "./oracle/manifest.webmanifest"
+
+  "./oracle/index.html"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(PRECACHE_URLS);
+    // 不要让某个资源 404 直接把整个 SW install 搞失败
+    await Promise.allSettled(PRECACHE_URLS.map((u) => cache.add(u)));
     await self.skipWaiting();
   })());
 });
@@ -33,42 +35,68 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
-
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
 
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
+  if (req.method !== "GET" || url.origin !== location.origin) return;
 
-    // ✅ 关键修复：把 /cycle/ 这种“根路径导航”强制当成 app.html
-    const scopePath = new URL(self.registration.scope).pathname; // e.g. "/cycle/"
-    const isScopeRoot =
-      url.pathname === scopePath || url.pathname === scopePath.replace(/\/$/, "");
+  // Navigation: network-first
+  if (req.mode === "navigate") {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
 
-    // 导航请求：优先网络，失败回落缓存；并且根路径统一回到 app.html
-    if (req.mode === "navigate") {
-      const navUrl = isScopeRoot ? new URL(APP_SHELL, self.registration.scope).toString() : req.url;
-      const navReq = isScopeRoot ? new Request(navUrl, { headers: req.headers, redirect: "follow" }) : req;
+      const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
+      const path = url.pathname.replace(/\/$/, "");
+      const isScopeRoot = path === scopePath;
+
+      const navReq = isScopeRoot ? new Request(APP_SHELL, { cache: "reload" }) : req;
 
       try {
         const fresh = await fetch(navReq);
         if (fresh && fresh.ok) {
-          cache.put(APP_SHELL, fresh.clone()); // 让 shell 永远是最新
-          if (!isScopeRoot) cache.put(req, fresh.clone());
+          // ✅ 缓存“自己”的页面（不要把别的页面覆盖到 app.html）
+          await cache.put(navReq, fresh.clone());
+          if (isScopeRoot) {
+            await cache.put(APP_SHELL, fresh.clone());
+          }
         }
         return fresh;
-      } catch (e) {
-        // ✅ 失败兜底顺序：app.html -> 目标页面 -> index.html -> "./"
-        return (
-          (await cache.match(APP_SHELL)) ||
+      } catch {
+        // offline fallback: exact page -> app shell -> index -> root
+        const cached =
+          (await caches.match(navReq, { ignoreSearch: true })) ||
+          (await caches.match(APP_SHELL, { ignoreSearch: true })) ||
+          (await caches.match("./index.html", { ignoreSearch: true })) ||
+          (await caches.match("./", { ignoreSearch: true }));
+        return cached || Response.error();
+      }
+    })());
+    return;
+  }
+
+  // Static: cache-first
+  event.respondWith((async () => {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+
+    try {
+      const fresh = await fetch(req);
+      if (fresh && fresh.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, fresh.clone());
+      }
+      return fresh;
+    } catch {
+      return cached || Response.error();
+    }
+  })());
+});          (await cache.match(APP_SHELL)) ||
           (await cache.match(req)) ||
           (await cache.match("./index.html")) ||
           (await cache.match("./"))
