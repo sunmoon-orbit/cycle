@@ -1,128 +1,113 @@
-/* SunMoon PWA Service Worker (safe precache + correct navigation caching) */
-
-const CACHE_NAME = "sunmoon-cycle-20260216-02";
-const APP_SHELL = "./app.html";
+/* SunMoon PWA Service Worker (stable) */
+const CACHE_NAME = "sunmoon-cycle-20260216-03";
+const SCOPE_ROOT = "/cycle/";
+const APP_SHELL = "/cycle/app.html";
 
 const PRECACHE_URLS = [
-  "./",
-  "./app.html",
-  "./index.html",
-  "./manifest.webmanifest",
+  "/cycle/",
+  "/cycle/app.html",
+  "/cycle/index.html",
+  "/cycle/manifest.webmanifest",
 
-  "./icons/favicon-32.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "/cycle/icons/favicon-32.png",
+  "/cycle/icons/apple-touch-icon.png",
+  "/cycle/icons/icon-192.png",
+  "/cycle/icons/icon-512.png",
 
-  "./draw/index.html",
-  "./draw/manifest.webmanifest",
-
-  "./vault/index.html",
-  "./vault/manifest.webmanifest",
-
-  "./oracle/index.html"
+  "/cycle/draw/index.html",
+  "/cycle/vault/index.html",
+  "/cycle/oracle/index.html",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    // 不要让某个资源 404 直接把整个 SW install 搞失败
-    await Promise.allSettled(PRECACHE_URLS.map((u) => cache.add(u)));
-    await self.skipWaiting();
-  })());
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      // 不让某个资源 404 直接导致 install 失败
+      await Promise.allSettled(PRECACHE_URLS.map((u) => cache.add(u)));
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
-    await self.clients.claim();
-  })());
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })()
+  );
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+  if (req.method !== "GET") return;
+
   const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
 
-  if (req.method !== "GET" || url.origin !== location.origin) return;
-
-  // Navigation: network-first
+  // 1) 页面导航：网络优先；离线时回退到 app.html（确保桌面图标打开是 Home）
   if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME);
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
 
-      const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
-      const path = url.pathname.replace(/\/$/, "");
-      const isScopeRoot = path === scopePath;
+        const path = url.pathname.replace(/\/$/, "");
+        const scopeRoot = SCOPE_ROOT.replace(/\/$/, "");
+        const isScopeRoot = path === scopeRoot;
 
-      const navReq = isScopeRoot ? new Request(APP_SHELL, { cache: "reload" }) : req;
+        // 桌面图标/打开根路径时，强制用 Home 作为导航目标
+        const navReq = isScopeRoot ? new Request(APP_SHELL, { cache: "reload" }) : req;
 
-      try {
-        const fresh = await fetch(navReq);
-        if (fresh && fresh.ok) {
-          // ✅ 缓存“自己”的页面（不要把别的页面覆盖到 app.html）
-          await cache.put(navReq, fresh.clone());
-          if (isScopeRoot) {
-            await cache.put(APP_SHELL, fresh.clone());
+        try {
+          const fresh = await fetch(navReq);
+          if (fresh && fresh.ok) {
+            await cache.put(navReq, fresh.clone());
+            // 如果是根路径，额外把 APP_SHELL 也覆盖一份，保证离线稳定
+            if (isScopeRoot) await cache.put(APP_SHELL, fresh.clone());
           }
+          return fresh;
+        } catch (e) {
+          // 离线：优先命中当前页 -> Home -> index -> 根
+          const cached =
+            (await caches.match(navReq, { ignoreSearch: true })) ||
+            (await caches.match(APP_SHELL, { ignoreSearch: true })) ||
+            (await caches.match("/cycle/index.html", { ignoreSearch: true })) ||
+            (await caches.match("/cycle/", { ignoreSearch: true }));
+
+          return cached || Response.error();
         }
-        return fresh;
-      } catch {
-        // offline fallback: exact page -> app shell -> index -> root
-        const cached =
-          (await caches.match(navReq, { ignoreSearch: true })) ||
-          (await caches.match(APP_SHELL, { ignoreSearch: true })) ||
-          (await caches.match("./index.html", { ignoreSearch: true })) ||
-          (await caches.match("./", { ignoreSearch: true }));
-        return cached || Response.error();
-      }
-    })());
+      })()
+    );
     return;
   }
 
-  // Static: cache-first
-  event.respondWith((async () => {
-    const cached = await caches.match(req);
-    if (cached) return cached;
+  // 2) 静态资源：缓存优先 + 后台更新
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(req);
 
-    try {
-      const fresh = await fetch(req);
-      if (fresh && fresh.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(req, fresh.clone());
-      }
-      return fresh;
-    } catch {
-      return cached || Response.error();
-    }
-  })());
-});          (await cache.match(APP_SHELL)) ||
-          (await cache.match(req)) ||
-          (await cache.match("./index.html")) ||
-          (await cache.match("./"))
+      if (cached) {
+        event.waitUntil(
+          (async () => {
+            try {
+              const fresh = await fetch(req);
+              if (fresh && fresh.ok) await cache.put(req, fresh.clone());
+            } catch {}
+          })()
         );
+        return cached;
       }
-    }
 
-    // 其它资源：缓存优先，网络更新
-    const cached = await cache.match(req);
-    if (cached) {
-      // 后台更新（不阻塞）
-      event.waitUntil((async () => {
-        try {
-          const fresh = await fetch(req);
-          if (fresh && fresh.ok) await cache.put(req, fresh.clone());
-        } catch {}
-      })());
-      return cached;
-    }
-
-    try {
-      const fresh = await fetch(req);
-      if (fresh && fresh.ok) await cache.put(req, fresh.clone());
-      return fresh;
-    } catch (e) {
-      return cached;
-    }
-  })());
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.ok) await cache.put(req, fresh.clone());
+        return fresh;
+      } catch (e) {
+        return Response.error();
+      }
+    })()
+  );
 });
