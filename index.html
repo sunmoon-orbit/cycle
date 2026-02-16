@@ -574,30 +574,51 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
       return `rgba(${r},${g},${b},${a})`;
     }
     function applyTheme(name){
-      const t = THEMES[name] || THEMES.lavender;
-      const r = document.documentElement.style;
-      r.setProperty("--a", t.a);
-      r.setProperty("--b", t.b);
-      r.setProperty("--c", t.c);
-      r.setProperty("--d", t.d);
-      r.setProperty("--bg1", t.bg1);
-      r.setProperty("--bg2", t.bg2);
-      r.setProperty("--bg3", t.bg3);
+  const t = THEMES[name] || THEMES.lavender;
+  const r = document.documentElement.style;
 
-      document.querySelectorAll(".theme").forEach(x=>{
-        x.classList.toggle("active", x.dataset.theme === name);
-      });
-      document.querySelectorAll(".theme .sw").forEach(sw=>{
-        const parent = sw.parentElement;
-        const tn = parent.dataset.theme;
-        const tt = THEMES[tn] || THEMES.lavender;
-        sw.style.background = `linear-gradient(135deg, ${tt.a}, ${tt.b})`;
-        sw.style.boxShadow = `0 0 0 5px ${hexToRgba(tt.a, 0.14)}`;
-      });
+  const set = (k, v) => {
+    if (v !== undefined && v !== null && v !== "") r.setProperty(k, v);
+  };
 
-      state.theme = name;
-      saveState();
-      toast("主题已切换。","✓");
+  set("--a", t.a);
+  set("--b", t.b);
+  set("--c", t.c);
+  set("--d", t.d);
+  set("--e", t.e);
+
+  set("--bg0", t.bg0);
+  set("--bg1", t.bg1);
+  set("--bg2", t.bg2);
+  set("--bg3", t.bg3 ?? t.bg2);
+
+  set("--card", t.card);
+  set("--ink", t.ink);
+  set("--muted", t.muted);
+  set("--line", t.line);
+
+  if (typeof t.shadow === "string" && t.shadow.includes("px")) {
+    set("--shadow", t.shadow);
+  }
+
+  r.setProperty("--ring",  hexToRgba(t.c, 0.20));
+  r.setProperty("--ring2", hexToRgba(t.d, 0.18));
+  r.setProperty("--stroke",hexToRgba(t.a, 0.18));
+
+  document.querySelectorAll(".theme").forEach(x=>{
+    x.classList.toggle("active", x.dataset.theme === name);
+  });
+  document.querySelectorAll(".theme .sw").forEach(sw=>{
+    const parent = sw.parentElement;
+    const tn = parent.dataset.theme;
+    const tt = THEMES[tn] || THEMES.lavender;
+    sw.style.background = `linear-gradient(135deg, ${tt.a}, ${tt.b})`;
+    sw.style.boxShadow = `0 0 0 5px ${hexToRgba(tt.a, 0.14)}`;
+  });
+
+  state.theme = name;
+  saveState();
+  toast("主题已切换。","✓");
     }
 
     const STORE_KEY = "cute_cycle_tracker_v1";
