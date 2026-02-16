@@ -545,26 +545,28 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     }
 
     const THEMES = {
-      lavender: { // 雾紫
-        a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
-        bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA",
-        shadow:"rgba(25, 30, 40, .12)"
-      },
-      mint: { // 鼠尾草
-        a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
-        bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE",
-        shadow:"rgba(20, 30, 25, .12)"
-      },
-      peach: { // 燕麦杏
-        a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
-        bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6",
-        shadow:"rgba(35, 28, 25, .12)"
-      },
-      sea: { // 雾蓝
-        a:"#8EA2B5", b:"#A6B6C5", c:"#B7B0B6", d:"#9DAFB3",
-        bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC",
-        shadow:"rgba(18, 28, 40, .12)"
-      }
+    const THEMES = {
+  lavender: { // 雾紫
+    a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
+    bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", bg3:"#E6E0DA",
+    shadow:"0 10px 24px rgba(25, 30, 40, .12)"
+  },
+  mint: { // 鼠尾草
+    a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
+    bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE", bg3:"#E2E5DE",
+    shadow:"0 10px 24px rgba(20, 30, 25, .12)"
+  },
+  peach: { // 燕麦杏
+    a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
+    bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6", bg3:"#E7DDD6",
+    shadow:"0 10px 24px rgba(35, 28, 25, .12)"
+  },
+  sea: { // 雾蓝
+    a:"#8EA2B5", b:"#A6B6C5", c:"#B7B0B6", d:"#9DAFB3",
+    bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC", bg3:"#DEE6EC",
+    shadow:"0 10px 24px rgba(18, 28, 40, .12)"
+  }
+};
     };
     function hexToRgba(hex, a){
       const h = hex.replace("#","");
