@@ -33,7 +33,7 @@
       --bg0:#ffffff; --bg1:#f7f3ff; --bg2:#f2fbff; --bg3:#fff0f8;
       --ink:#2f2a3a; --muted:#6b647a;
       --card: rgba(255,255,255,.78); --card2: rgba(255,255,255,.58);
-      --stroke: rgba(40,20,80,.10); --shadow: 0 18px 55px rgba(40, 20, 80, .12);
+      --stroke: rgba(40,20,80,.10); --shadow: rgba(40, 20, 80, .12);
       --radius: 22px; --ring: rgba(167,139,250,.55); --ring2: rgba(125,211,252,.50);
     }
     *{ box-sizing:border-box; }
@@ -257,7 +257,10 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     .outline.today{ border-color: rgba(40,20,80,.12); }
 
     .themePills{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
-    .theme{
+    
+    /* mobile theme pills center */
+    @media (max-width: 520px){ .themePills{ width:100%; justify-content:center; } }
+.theme{
       display:flex; align-items:center; gap:8px;
       padding:8px 10px; border-radius: 999px;
       border: 1px solid rgba(40,20,80,.10);
@@ -323,7 +326,7 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     button.primary{
       background: var(--a) !important;
       border-color: rgba(0,0,0,.10) !important;
-      ： box-shadow: 0 12px 28px var(--shadow) !important;
+      box-shadow: 0 12px 28px var(--shadow) !important;
     }
     button.primary:hover{ filter: brightness(.98); }
     button.ghost{
@@ -547,24 +550,24 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
   lavender: { // 雾紫
     a:"#9B96AE", b:"#A9AFC2", c:"#C6B2B8", d:"#AAB8A6",
     bg0:"#F4F2EF", bg1:"#EEEAE6", bg2:"#E6E0DA", bg3:"#E6E0DA",
-    shadow:"0 10px 24px rgba(25, 30, 40, .12)"
+    shadow:"rgba(25, 30, 40, .12)"
   },
   mint: { // 鼠尾草
     a:"#8FA59A", b:"#A8B7AD", c:"#B9B2A5", d:"#95A6B0",
     bg0:"#F3F3F0", bg1:"#ECEDE8", bg2:"#E2E5DE", bg3:"#E2E5DE",
-    shadow:"0 10px 24px rgba(20, 30, 25, .12)"
+    shadow:"rgba(20, 30, 25, .12)"
   },
   peach: { // 燕麦杏
     a:"#B8A39A", b:"#C7B6AE", c:"#A8A0A6", d:"#B7B3A6",
     bg0:"#F6F2EE", bg1:"#EFE7E1", bg2:"#E7DDD6", bg3:"#E7DDD6",
-    shadow:"0 10px 24px rgba(35, 28, 25, .12)"
+    shadow:"rgba(35, 28, 25, .12)"
   },
-  sea: { // 雾蓝
+  mono: { // 雾灰
     a:"#8EA2B5", b:"#A6B6C5", c:"#B7B0B6", d:"#9DAFB3",
     bg0:"#F2F4F6", bg1:"#E9EEF2", bg2:"#DEE6EC", bg3:"#DEE6EC",
-    shadow:"0 10px 24px rgba(18, 28, 40, .12)"
+    shadow:"rgba(18, 28, 40, .12)"
   }
-};
+
     function hexToRgba(hex, a){
       const h = hex.replace("#","");
       const r = parseInt(h.slice(0,2),16);
@@ -596,9 +599,7 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
   set("--muted", t.muted);
   set("--line", t.line);
 
-  if (typeof t.shadow === "string" && t.shadow.includes("px")) {
-    set("--shadow", t.shadow);
-  }
+  if (typeof t.shadow === "string") { set("--shadow", t.shadow); }
 
   r.setProperty("--ring",  hexToRgba(t.c, 0.20));
   r.setProperty("--ring2", hexToRgba(t.d, 0.18));
@@ -961,7 +962,7 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
       }
       state.records.unshift({ start: today, end: "", note: "" });
       saveState();
-      renderAll();
+      rerenderAll();
       toast("已快速开始：今天 ✅");
     }
 
@@ -979,7 +980,7 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
       }
       r.end = today;
       saveState();
-      renderAll();
+      rerenderAll();
       toast("已快速结束：今天 ✅");
     }
 
