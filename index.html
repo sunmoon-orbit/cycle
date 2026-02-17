@@ -85,7 +85,7 @@
       backdrop-filter: blur(12px);
       border:1px solid rgba(255,255,255,.55);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: 0 10px 24px var(--shadow);
       padding:18px;
       position:relative;
       overflow:hidden;
@@ -323,7 +323,7 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     button.primary{
       background: var(--a) !important;
       border-color: rgba(0,0,0,.10) !important;
-      box-shadow: var(--shadow) !important;
+      ： box-shadow: 0 12px 28px var(--shadow) !important;
     }
     button.primary:hover{ filter: brightness(.98); }
     button.ghost{
@@ -331,7 +331,6 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
       border-color: rgba(0,0,0,.08) !important;
     }
     button.ghost:hover{ filter: brightness(.98); }
-    box-shadow: var(--shadow);
     input, textarea{
       background: rgba(255,255,255,.70) !important;
     }
