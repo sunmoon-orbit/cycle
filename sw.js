@@ -1,5 +1,5 @@
 // bump this when you change files to force refresh
-const CACHE_VERSION = "2026-02-16-1";
+const CACHE_VERSION = "2026-02-17-1";
 const CACHE_NAME = `sunmoon-cycle-${CACHE_VERSION}`;
 
 const CORE = [
