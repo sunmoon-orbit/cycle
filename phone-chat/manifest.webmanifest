@@ -1,6 +1,7 @@
 {
   "name": "曜的私人手机 · LoveChat",
   "short_name": "LoveChat",
+  "id": "/cycle/phone-chat/",
   "start_url": "/cycle/phone-chat/",
   "scope": "/cycle/phone-chat/",
   "display": "standalone",
@@ -8,10 +9,22 @@
   "theme_color": "#0b1020",
   "icons": [
     {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "./icon.svg?v=2",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
