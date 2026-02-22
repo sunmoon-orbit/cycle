@@ -1,0 +1,17 @@
+{
+  "name": "曜的私人手机 · LoveChat",
+  "short_name": "LoveChat",
+  "start_url": "/cycle/phone-chat/",
+  "scope": "/cycle/phone-chat/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {
+      "src": "./icon.svg?v=2",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
