@@ -231,7 +231,7 @@ body {
 .dock .icon-box { width:56px; height:56px; border-radius:16px; font-size:24px; }
 
 .app-layer {
-  z-index:20;
+  z-index:65;
   pointer-events:none;
 }
 .app-window {
@@ -834,24 +834,63 @@ body {
       style.textContent = `
         html, body { height:100% !important; }
         body { -webkit-text-size-adjust: 100%; }
-        .header { z-index: 30 !important; }
+        .header {
+          z-index: 30 !important;
+          padding: 8px 10px !important;
+          gap: 8px !important;
+        }
+        .header .icon-btn, .header .btn, .header .clear {
+          min-height: 36px !important;
+          padding: 8px 10px !important;
+          border-radius: 12px !important;
+          line-height: 1 !important;
+          flex-shrink: 0 !important;
+        }
         .footer {
           height: 82px !important;
           min-height: 82px !important;
-          padding: 10px !important;
+          padding: 8px !important;
+          gap: 8px !important;
           align-items: center !important;
         }
+        .footer .btn, .footer .icon-btn {
+          min-height: 40px !important;
+          padding: 8px 10px !important;
+          border-radius: 12px !important;
+          font-size: 13px !important;
+          line-height: 1 !important;
+          white-space: nowrap !important;
+          flex-shrink: 0 !important;
+        }
         .input {
-          min-height: 46px !important;
-          max-height: 110px !important;
+          min-width: 0 !important;
+          width: auto !important;
+          min-height: 44px !important;
+          max-height: 96px !important;
           line-height: 1.35 !important;
           padding: 10px 12px !important;
+          font-size: 14px !important;
+          border-radius: 12px !important;
           box-sizing: border-box !important;
+          flex: 1 1 auto !important;
         }
-        .input::placeholder { line-height: 1.35 !important; }
-        .btn, .icon-btn { flex-shrink: 0 !important; }
+        .input::placeholder {
+          line-height: 1.2 !important;
+          font-size: 13px !important;
+        }
       `;
       doc.head.appendChild(style);
+
+      // 小屏微调：缩短占位文案，避免输入框看起来被挤爆
+      const inputEl = doc.querySelector('.input');
+      if(inputEl){
+        try { inputEl.placeholder = "想对清清说点什么…"; } catch(_) {}
+      }
+      const footerBtns = Array.from(doc.querySelectorAll('.footer .btn, .footer .icon-btn'));
+      footerBtns.forEach(btn=>{
+        const t = (btn.textContent || "").trim();
+        if(t === "戳一戳") btn.textContent = "戳";
+      });
     }catch(e){ console.warn("lovechat iframe patch failed", e); }
   }
 
@@ -865,8 +904,8 @@ body {
         <div class="row"><strong>LoveChat 融合</strong><span class="tag">独立运行</span></div>
         <div class="small muted" style="margin-top:6px; line-height:1.4">${tip}</div>
         <div class="inline-actions" style="margin-top:10px">
-          <button class="btn-secondary" id="btnReloadChat">重载 LoveChat</button>
-          <button class="btn-secondary" id="btnOpenLastHint">查看集成说明</button>
+          <button class="btn-secondary" id="btnReloadChat">重载聊天</button>
+          <button class="btn-secondary" id="btnOpenLastHint">查看说明</button>
         </div>
       </div>
       <div class="card" style="padding:10px; height: calc(100dvh - 240px - var(--safe-top) - var(--safe-bottom)); min-height: 420px;">
