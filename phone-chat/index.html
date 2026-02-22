@@ -129,7 +129,8 @@ body {
   border:1px solid rgba(255,255,255,.10);
   border-radius: 18px;
   padding: 14px 14px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(10px);
   color: rgba(255,255,255,.93);
   line-height: 1.45;
@@ -254,10 +255,11 @@ body {
   height: calc(52px + var(--safe-top));
   padding: calc(8px + var(--safe-top)) 12px 8px;
   display:flex; align-items:center; gap:10px;
-  background: rgba(11,16,28,.45);
+  background: linear-gradient(180deg, rgba(8,12,22,.92), rgba(10,14,24,.86));
   border-bottom:1px solid rgba(255,255,255,.08);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  z-index: 8;
 }
 .back-btn, .hdr-btn {
   border:none; color:var(--text);
@@ -268,8 +270,9 @@ body {
 .app-title { font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .app-body {
   flex:1; overflow:auto;
-  padding: 12px;
+  padding: 68px 12px 12px;
 }
+/* 68px = app header(56) + top gap */
 .card {
   background: rgba(255,255,255,.08);
   border:1px solid rgba(255,255,255,.10);
@@ -821,6 +824,37 @@ body {
     }
   }
 
+  function patchLoveChatIframe(frame){
+    try{
+      const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      if(!doc || !doc.head) return;
+      if(doc.getElementById("lovechat-embed-fix-style")) return;
+      const style = doc.createElement("style");
+      style.id = "lovechat-embed-fix-style";
+      style.textContent = `
+        html, body { height:100% !important; }
+        body { -webkit-text-size-adjust: 100%; }
+        .header { z-index: 30 !important; }
+        .footer {
+          height: 82px !important;
+          min-height: 82px !important;
+          padding: 10px !important;
+          align-items: center !important;
+        }
+        .input {
+          min-height: 46px !important;
+          max-height: 110px !important;
+          line-height: 1.35 !important;
+          padding: 10px 12px !important;
+          box-sizing: border-box !important;
+        }
+        .input::placeholder { line-height: 1.35 !important; }
+        .btn, .icon-btn { flex-shrink: 0 !important; }
+      `;
+      doc.head.appendChild(style);
+    }catch(e){ console.warn("lovechat iframe patch failed", e); }
+  }
+
   function renderLoveChat(root){
     const tip = personaText(
       "把 LoveChat 当作手机里的一个独立 App 放进来了。原功能基本保留，方便你单独玩。",
@@ -835,11 +869,12 @@ body {
           <button class="btn-secondary" id="btnOpenLastHint">查看集成说明</button>
         </div>
       </div>
-      <div class="card" style="padding:10px; height: calc(100vh - 240px - var(--safe-top) - var(--safe-bottom)); min-height: 420px;">
+      <div class="card" style="padding:10px; height: calc(100dvh - 240px - var(--safe-top) - var(--safe-bottom)); min-height: 420px;">
         <iframe class="chat-iframe" id="lovechatFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
       </div>
     `;
     const iframe = qs("#lovechatFrame", root);
+    iframe.addEventListener("load", ()=> patchLoveChatIframe(iframe));
     const setSrc = ()=>{
       try {
         const html = decodeURIComponent(escape(atob(LOVECHAT_B64)));
