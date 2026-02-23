@@ -523,6 +523,10 @@ body {
       lamp: "暖黄",
       ac: 23
     },
+    notes: [],
+    notesSelectedId: null,
+    moodEntries: {},
+    moodTagsPreset: ["开心","平静","想你","疲惫","焦虑","有成就","烦躁"],
     notesLastId: 1,
     mailsRead: [],
     notifications: [
@@ -612,6 +616,7 @@ body {
   const appCatalog = [
     { id:"lovechat", emoji:"💬", name:"LoveChat", color:"linear-gradient(160deg,#b3d9c3,#86caa3)" },
     { id:"notes", emoji:"📝", name:"备忘录", color:"linear-gradient(160deg,#f2dca7,#d4b56a)" },
+    { id:"checkin", emoji:"📅", name:"打卡", color:"linear-gradient(160deg,#c9efb8,#92d69e)" },
     { id:"fitness", emoji:"💪", name:"健身", color:"linear-gradient(160deg,#ffb7c8,#f48fb1)" },
     { id:"home", emoji:"🏠", name:"家庭", color:"linear-gradient(160deg,#aec4ff,#8ea9d6)" },
     { id:"safari", emoji:"🌐", name:"Safari", color:"linear-gradient(160deg,#9fd9ff,#73b0f2)" },
@@ -820,6 +825,7 @@ body {
     switch(id){
       case "lovechat": return renderLoveChat(root);
       case "notes": return renderNotes(root);
+      case "checkin": return renderCheckin(root);
       case "fitness": return renderFitness(root);
       case "home": return renderHomeApp(root);
       case "safari": return renderSafari(root);
@@ -943,58 +949,443 @@ body {
     });
   }
 
-  function renderNotes(root){
-    const lastId = state.notesLastId || notesData[0].id;
-    const current = notesData.find(n=>n.id===lastId) || notesData[0];
-    root.innerHTML = `
-      <div class="card">
-        <div class="row"><strong>备忘录</strong><span class="tag">最近查看：#${current.id}</span></div>
-        <div class="small muted" style="margin-top:6px">数据驱动渲染 · 点击左侧列表查看详情</div>
-      </div>
-      <div style="display:grid; grid-template-columns: 42% 58%; gap:10px; margin-top:10px;" id="notesLayout">
-        <div class="card" style="padding:8px">
-          <div class="list" id="notesList"></div>
-        </div>
-        <div class="card" id="noteDetail"></div>
-      </div>
-    `;
-    const list = qs("#notesList", root);
-    const detail = qs("#noteDetail", root);
-
-    function renderDetail(id){
-      const n = notesData.find(x=>x.id===id) || notesData[0];
-      state.notesLastId = n.id;
+function renderNotes(root){
+  function ensureNotes(){
+    if(!Array.isArray(state.notes) || !state.notes.length){
+      state.notes = notesData.map((n, i)=>({
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        tags: i===1 ? ["待办"] : (i===2 ? ["草稿"] : ["记录"]),
+        pinned: i===0,
+        createdAt: Date.now() - (notesData.length-i) * 3600 * 1000,
+        updatedAt: Date.now() - (notesData.length-i) * 1800 * 1000
+      }));
+      state.notesLastId = Math.max(...state.notes.map(n=>n.id), 0);
+      state.notesSelectedId = state.notes[0]?.id || null;
       saveState();
-      detail.innerHTML = `
-        <div class="small muted">${n.time}</div>
-        <div style="font-weight:700; font-size:16px; margin:4px 0 8px">${n.title}</div>
-        <div class="note-detail">${escapeHtml(n.body)}</div>
-      `;
-      qsa(".list-item", list).forEach(el=> el.style.outline = "");
-      const activeEl = qs(`[data-note-id="${n.id}"]`, list);
-      if(activeEl) activeEl.style.outline = "1px solid rgba(255,255,255,.22)";
     }
+    if(!state.notesSelectedId && state.notes[0]) state.notesSelectedId = state.notes[0].id;
+  }
+  ensureNotes();
 
-    notesData.forEach(n=>{
+  const fmt = (ts)=>{
+    const d = new Date(ts || Date.now());
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    if(sameDay) return "今天 " + formatHM(d);
+    return `${d.getMonth()+1}/${d.getDate()} ${formatHM(d)}`;
+  };
+
+  root.innerHTML = `
+    <div class="card">
+      <div class="row"><strong>备忘录（升级版）</strong><span class="tag">本地保存 · 可置顶/搜索</span></div>
+      <div class="small muted" style="margin-top:6px">左边选便签，右边编辑。保存后会留在手机里。</div>
+      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+        <input id="notesSearch" placeholder="搜索标题 / 内容 / 标签" style="flex:1; min-width:160px; background:rgba(255,255,255,.06); color:#eef4ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; outline:none" />
+        <button class="btn-secondary" id="noteNewBtn">＋ 新建</button>
+        <button class="btn-secondary" id="noteDupBtn">复制</button>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: 42% 58%; gap:10px; margin-top:10px;" id="notesLayout">
+      <div class="card" style="padding:8px">
+        <div class="list" id="notesList"></div>
+      </div>
+      <div class="card" id="noteDetail"></div>
+    </div>
+  `;
+
+  const listEl = qs("#notesList", root);
+  const detailEl = qs("#noteDetail", root);
+  const searchEl = qs("#notesSearch", root);
+  let keyword = "";
+
+  function allNotesSorted(){
+    return [...(state.notes || [])].sort((a,b)=>{
+      if(!!b.pinned !== !!a.pinned) return (b.pinned?1:0) - (a.pinned?1:0);
+      return (b.updatedAt||0) - (a.updatedAt||0);
+    });
+  }
+  function getSelected(){
+    const notes = state.notes || [];
+    return notes.find(n=>n.id === state.notesSelectedId) || notes[0] || null;
+  }
+  function shortText(str, n){
+    const t = String(str || "").replace(/\s+/g, " ").trim();
+    return t.length > n ? t.slice(0, n) + "…" : (t || "（空白便签）");
+  }
+  function filterNotes(){
+    const q = keyword.trim().toLowerCase();
+    if(!q) return allNotesSorted();
+    return allNotesSorted().filter(n=>{
+      const hay = [n.title, n.body, (n.tags||[]).join(" ")].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function persistTouch(note){
+    note.updatedAt = Date.now();
+    saveState();
+  }
+
+  function renderList(){
+    const notes = filterNotes();
+    listEl.innerHTML = "";
+    if(!notes.length){
+      listEl.innerHTML = `<div class="small muted" style="padding:10px">没有匹配的便签。</div>`;
+      return;
+    }
+    notes.forEach(n=>{
       const item = document.createElement("div");
       item.className = "list-item linkish";
       item.dataset.noteId = n.id;
+      const tags = (n.tags||[]).slice(0,3).map(t=>`<span class="tag" style="font-size:10px">${escapeHtml(t)}</span>`).join(" ");
       item.innerHTML = `
-        <div class="small muted">${n.time}</div>
-        <div class="note-title">${n.title}</div>
-        <div class="note-preview">${n.preview}</div>
+        <div class="row" style="gap:6px">
+          <div class="small muted">${fmt(n.updatedAt || n.createdAt)}</div>
+          <div style="margin-left:auto; display:flex; gap:4px; align-items:center">
+            ${n.pinned ? `<span class="tag" style="font-size:10px">置顶</span>` : ""}
+          </div>
+        </div>
+        <div class="note-title">${escapeHtml(n.title || "未命名便签")}</div>
+        <div class="note-preview">${escapeHtml(shortText(n.body, 44))}</div>
+        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:6px">${tags || ""}</div>
       `;
-      item.addEventListener("click", ()=> renderDetail(n.id));
-      list.appendChild(item);
+      item.addEventListener("click", ()=>{
+        state.notesSelectedId = n.id;
+        saveState();
+        renderList();
+        renderDetail();
+      });
+      if(state.notesSelectedId === n.id) item.style.outline = "1px solid rgba(255,255,255,.22)";
+      listEl.appendChild(item);
     });
-    renderDetail(current.id);
+  }
 
-    if(window.innerWidth < 360) {
-      qs("#notesLayout", root).style.gridTemplateColumns = "1fr";
+  function renderDetail(){
+    const note = getSelected();
+    if(!note){
+      detailEl.innerHTML = `<div class="small muted">还没有便签，点“新建”。</div>`;
+      return;
+    }
+    detailEl.innerHTML = `
+      <div class="row" style="align-items:flex-start; gap:8px">
+        <div>
+          <div class="small muted">最后更新：${fmt(note.updatedAt || note.createdAt)}</div>
+          <div class="small muted" style="margin-top:4px">字数：<span id="noteWordCount">${(note.body||"").length}</span></div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end">
+          <button class="btn-secondary" id="notePinBtn">${note.pinned ? "取消置顶" : "置顶"}</button>
+          <button class="btn-secondary" id="noteSaveBtn">保存</button>
+          <button class="btn-secondary" id="noteDeleteBtn">删除</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <input id="noteTitleInput" value="${escapeAttr(note.title || "")}" placeholder="便签标题" style="width:100%; background:rgba(255,255,255,.06); color:#eef4ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; outline:none" />
+      </div>
+      <div style="margin-top:8px">
+        <input id="noteTagsInput" value="${escapeAttr((note.tags||[]).join(", "))}" placeholder="标签（逗号分隔）例如：工作, 灵感" style="width:100%; background:rgba(255,255,255,.06); color:#eef4ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; outline:none" />
+      </div>
+      <div style="margin-top:8px">
+        <textarea id="noteBodyInput" placeholder="写点什么…" style="width:100%; min-height:260px; resize:vertical; background:rgba(255,255,255,.04); color:#eef4ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px; outline:none; line-height:1.55">${escapeHtml(note.body || "")}</textarea>
+      </div>
+      <div class="small muted" style="margin-top:8px">提示：修改后点“保存”；复制可快速做模板。</div>
+    `;
+    const titleInput = qs("#noteTitleInput", detailEl);
+    const tagsInput = qs("#noteTagsInput", detailEl);
+    const bodyInput = qs("#noteBodyInput", detailEl);
+    const wcEl = qs("#noteWordCount", detailEl);
+
+    const updateCount = ()=> { if(wcEl) wcEl.textContent = String((bodyInput.value || "").length); };
+    bodyInput.addEventListener("input", updateCount);
+
+    function applyDraftToNote(){
+      note.title = (titleInput.value || "").trim() || "未命名便签";
+      note.body = bodyInput.value || "";
+      note.tags = (tagsInput.value || "")
+        .split(/[，,]/)
+        .map(t=>t.trim())
+        .filter(Boolean)
+        .slice(0,8);
+      persistTouch(note);
+    }
+
+    qs("#noteSaveBtn", detailEl).addEventListener("click", ()=>{
+      applyDraftToNote();
+      renderList();
+      renderDetail();
+      showToast("已保存便签");
+    });
+
+    qs("#notePinBtn", detailEl).addEventListener("click", ()=>{
+      note.pinned = !note.pinned;
+      persistTouch(note);
+      renderList();
+      renderDetail();
+      showToast(note.pinned ? "已置顶" : "已取消置顶");
+    });
+
+    qs("#noteDeleteBtn", detailEl).addEventListener("click", ()=>{
+      const notes = state.notes || [];
+      if(notes.length <= 1){
+        showToast("至少保留一条便签");
+        return;
+      }
+      state.notes = notes.filter(n=>n.id !== note.id);
+      const sortedAfter = [...state.notes].sort((a,b)=>{
+        if(!!b.pinned !== !!a.pinned) return (b.pinned?1:0) - (a.pinned?1:0);
+        return (b.updatedAt||0) - (a.updatedAt||0);
+      });
+      state.notesSelectedId = (sortedAfter[0] && sortedAfter[0].id) || null;
+      saveState();
+      renderList();
+      renderDetail();
+      showToast("已删除");
+    });
+  }
+
+  function createNote(copyFromCurrent=false){
+    const curr = copyFromCurrent ? getSelected() : null;
+    const nextId = Math.max(0, ...(state.notes||[]).map(n=>n.id||0), state.notesLastId||0) + 1;
+    const now = Date.now();
+    const newNote = curr ? {
+      id: nextId,
+      title: (curr.title || "便签") + "（副本）",
+      body: curr.body || "",
+      tags: [...(curr.tags||[])],
+      pinned: false,
+      createdAt: now,
+      updatedAt: now
+    } : {
+      id: nextId,
+      title: "新便签",
+      body: "",
+      tags: [],
+      pinned: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    state.notes = [newNote, ...(state.notes || [])];
+    state.notesLastId = nextId;
+    state.notesSelectedId = nextId;
+    saveState();
+    renderList();
+    renderDetail();
+    showToast(copyFromCurrent ? "已复制为新便签" : "已新建便签");
+  }
+
+  qs("#noteNewBtn", root).addEventListener("click", ()=> createNote(false));
+  qs("#noteDupBtn", root).addEventListener("click", ()=> createNote(true));
+  searchEl.addEventListener("input", ()=>{
+    keyword = searchEl.value || "";
+    renderList();
+  });
+
+  renderList();
+  renderDetail();
+
+  if(window.innerWidth < 380) {
+    const layout = qs("#notesLayout", root);
+    if(layout) layout.style.gridTemplateColumns = "1fr";
+  }
+}
+
+function renderCheckin(root){
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  if(!state.moodEntries || typeof state.moodEntries !== "object") state.moodEntries = {};
+  if(!Array.isArray(state.moodTagsPreset) || !state.moodTagsPreset.length){
+    state.moodTagsPreset = ["开心","平静","想你","疲惫","焦虑","有成就","烦躁"];
+    saveState();
+  }
+
+  const moodOptions = [
+    { tag:"超开心", score:5, emoji:"😁" },
+    { tag:"开心", score:4, emoji:"😊" },
+    { tag:"平静", score:3, emoji:"😌" },
+    { tag:"想你", score:4, emoji:"🥺" },
+    { tag:"疲惫", score:2, emoji:"😵‍💫" },
+    { tag:"焦虑", score:2, emoji:"😖" },
+    { tag:"烦躁", score:1, emoji:"😤" },
+    { tag:"难过", score:1, emoji:"😢" },
+    { tag:"有成就", score:5, emoji:"😎" }
+  ];
+  const optionMap = Object.fromEntries(moodOptions.map(x=>[x.tag, x]));
+  const todays = state.moodEntries[todayKey] || { tag:"", score:0, note:"" };
+
+  const allEntries = Object.entries(state.moodEntries)
+    .map(([date,v])=>({ date, ...(v||{}) }))
+    .filter(x=>x && x.tag)
+    .sort((a,b)=> b.date.localeCompare(a.date));
+
+  let streak = 0;
+  {
+    const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    while(true){
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,"0")}-${String(cursor.getDate()).padStart(2,"0")}`;
+      if(state.moodEntries[key]?.tag){
+        streak++;
+        cursor.setDate(cursor.getDate()-1);
+      }else break;
     }
   }
 
-  function renderFitness(root){
+  const last30 = allEntries.filter(e=>{
+    const diff = (today - new Date(e.date + "T00:00:00")) / 86400000;
+    return diff >= 0 && diff < 30;
+  });
+  const counts = {};
+  let scoreSum = 0;
+  last30.forEach(e=>{
+    counts[e.tag] = (counts[e.tag] || 0) + 1;
+    scoreSum += Number(e.score || optionMap[e.tag]?.score || 0);
+  });
+  const topStats = Object.entries(counts).sort((a,b)=> b[1]-a[1]).slice(0,6);
+  const avgScore = last30.length ? (scoreSum / last30.length).toFixed(1) : "—";
+
+  const last14 = [];
+  for(let i=13;i>=0;i--){
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const entry = state.moodEntries[key];
+    last14.push({ key, day:`${d.getMonth()+1}/${d.getDate()}`, tag: entry?.tag || "", score: Number(entry?.score || 0) });
+  }
+
+  root.innerHTML = `
+    <div class="card">
+      <div class="row"><strong>心情打卡</strong><span class="tag">本地保存 · 心情统计</span></div>
+      <div class="small muted" style="margin-top:6px">今天：${todayKey} · 连续打卡 <strong>${streak}</strong> 天</div>
+      <div style="display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:8px; margin-top:10px">
+        <div class="card" style="padding:10px; background:rgba(255,255,255,.03)">
+          <div class="small muted">近30天记录</div>
+          <div style="font-weight:800; font-size:20px; margin-top:4px">${last30.length}</div>
+        </div>
+        <div class="card" style="padding:10px; background:rgba(255,255,255,.03)">
+          <div class="small muted">平均心情分</div>
+          <div style="font-weight:800; font-size:20px; margin-top:4px">${avgScore}</div>
+        </div>
+        <div class="card" style="padding:10px; background:rgba(255,255,255,.03)">
+          <div class="small muted">今日标签</div>
+          <div style="font-weight:800; font-size:16px; margin-top:6px">${todays.tag ? escapeHtml(todays.tag) : "未打卡"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><strong>今日打卡</strong><span class="small muted">点一下标签即可保存</span></div>
+      <div id="moodTagWrap" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px"></div>
+      <div style="margin-top:10px">
+        <textarea id="moodNoteInput" placeholder="今天发生了什么？（可选）" style="width:100%; min-height:92px; resize:vertical; background:rgba(255,255,255,.04); color:#eef4ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px; outline:none; line-height:1.5">${escapeHtml(todays.note || "")}</textarea>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap">
+        <button class="btn-secondary" id="moodSaveBtn">保存备注</button>
+        <button class="btn-secondary" id="moodClearBtn">清除今日打卡</button>
+        <button class="btn-secondary" id="moodAllBtn">查看记录</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><strong>最近 14 天</strong><span class="small muted">打卡轨迹</span></div>
+      <div id="mood14Grid" style="display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="row"><strong>心情统计</strong><span class="small muted">近30天标签次数</span></div>
+      <div id="moodStatsList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px"></div>
+    </div>
+  `;
+
+  const wrap = qs("#moodTagWrap", root);
+  const noteInput = qs("#moodNoteInput", root);
+
+  function saveToday(patch){
+    const old = state.moodEntries[todayKey] || {};
+    const merged = { ...old, ...patch, updatedAt: Date.now() };
+    if(!merged.tag){
+      delete state.moodEntries[todayKey];
+    }else{
+      if(!merged.score) merged.score = optionMap[merged.tag]?.score || 3;
+      state.moodEntries[todayKey] = merged;
+    }
+    saveState();
+  }
+
+  moodOptions.forEach(opt=>{
+    const btn = document.createElement("button");
+    const active = todays.tag === opt.tag;
+    btn.className = "btn-secondary";
+    btn.style.cssText = `padding:8px 10px; border-radius:999px; ${active ? "background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.26)" : ""}`;
+    btn.innerHTML = `${opt.emoji} ${escapeHtml(opt.tag)}`;
+    btn.addEventListener("click", ()=>{
+      saveToday({ tag: opt.tag, score: opt.score, note: noteInput.value || "" });
+      openApp("checkin", true);
+      showToast("已打卡");
+    });
+    wrap.appendChild(btn);
+  });
+
+  qs("#moodSaveBtn", root).addEventListener("click", ()=>{
+    const current = state.moodEntries[todayKey];
+    if(!(current && current.tag)){
+      showToast("先选一个心情标签");
+      return;
+    }
+    saveToday({ note: noteInput.value || "" });
+    showToast("备注已保存");
+  });
+
+  qs("#moodClearBtn", root).addEventListener("click", ()=>{
+    delete state.moodEntries[todayKey];
+    saveState();
+    openApp("checkin", true);
+    showToast("已清除今日打卡");
+  });
+
+  qs("#moodAllBtn", root).addEventListener("click", ()=>{
+    const rows = allEntries.slice(0, 60).map(e=>{
+      const note = e.note ? `<div class="small muted" style="margin-top:4px">${escapeHtml(String(e.note).slice(0,80))}</div>` : "";
+      return `<div class="list-item" style="margin-bottom:8px">
+        <div class="row"><strong>${escapeHtml(e.tag || "未命名")}</strong><span class="small muted">${e.date}</span></div>
+        <div class="small muted">评分：${e.score || optionMap[e.tag]?.score || "—"}</div>
+        ${note}
+      </div>`;
+    }).join("") || `<div class="small muted">暂无记录</div>`;
+    showModal(`<div style="font-weight:700; margin-bottom:8px">心情打卡记录</div>${rows}`);
+  });
+
+  const g14 = qs("#mood14Grid", root);
+  last14.forEach(item=>{
+    const cell = document.createElement("div");
+    const alpha = item.score ? (0.10 + item.score * 0.08) : 0.03;
+    cell.style.cssText = `border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:8px; background:rgba(174,196,255,${alpha.toFixed(2)}); min-height:62px`;
+    cell.innerHTML = `
+      <div class="small muted">${item.day}</div>
+      <div style="font-weight:700; margin-top:4px; font-size:12px; line-height:1.2">${escapeHtml(item.tag || "未打卡")}</div>
+    `;
+    g14.appendChild(cell);
+  });
+
+  const statsEl = qs("#moodStatsList", root);
+  if(!topStats.length){
+    statsEl.innerHTML = `<div class="small muted">先打几天卡，这里会自动统计你的心情标签分布。</div>`;
+  }else{
+    const maxV = Math.max(...topStats.map(x=>x[1]), 1);
+    topStats.forEach(([tag, num])=>{
+      const row = document.createElement("div");
+      const width = Math.max(6, Math.round(num / maxV * 100));
+      row.innerHTML = `
+        <div class="row" style="margin-bottom:6px"><span>${escapeHtml(tag)}</span><span class="small muted">${num} 次</span></div>
+        <div style="height:8px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden">
+          <div style="height:100%; width:${width}%; background:linear-gradient(90deg, rgba(142,169,214,.85), rgba(214,200,255,.8)); border-radius:999px"></div>
+        </div>
+      `;
+      statsEl.appendChild(row);
+    });
+  }
+}
+
+function renderFitness(root){
+
     root.innerHTML = `
       <div class="card">
         <div class="row"><strong>健身</strong><span class="tag">${personaText("守护监测","黑心盯梢")}</span></div>
