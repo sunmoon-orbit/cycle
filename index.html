@@ -220,39 +220,39 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
   position:absolute;
   left:8px; right:8px;
   bottom:6px;
-  height:10px;                 /* 原来6px -> 8px 更清楚 */
+  height:12px;
   border-radius:999px;
   opacity:1;
-  box-shadow: 0 0 0 1px rgba(40,20,80,.22); /* 细描边提对比 */
+  box-shadow: 0 0 0 1.5px rgba(40,20,80,.25);
 }
 
 .tag.bleed{
   background: var(--c);
-  background: color-mix(in srgb, var(--c) 70%, white 30%);
+  background: color-mix(in srgb, var(--c) 92%, white 8%);
 }
 
 .tag.start{
   background: linear-gradient(135deg,
-    color-mix(in srgb, var(--c) 88%, white 12%),
-    color-mix(in srgb, var(--c) 62%, white 38%)
+    color-mix(in srgb, var(--c) 100%, white 0%),
+    color-mix(in srgb, var(--c) 82%, white 18%)
   );
 }
 
 .tag.fertile{
   background: var(--d);
-  background: color-mix(in srgb, var(--d) 72%, white 28%);
+  background: color-mix(in srgb, var(--d) 92%, white 8%);
 }
 
 .tag.ovul{
   background: linear-gradient(135deg,
-    color-mix(in srgb, var(--d) 88%, white 12%),
-    color-mix(in srgb, var(--d) 62%, white 38%)
+    color-mix(in srgb, var(--d) 100%, white 0%),
+    color-mix(in srgb, var(--d) 82%, white 18%)
   );
 }
     .outline{ position:absolute; inset:4px; border-radius: 12px; border:2px solid transparent; pointer-events:none; }
     .outline.predict{
-      border-color: color-mix(in srgb, var(--b) 70%, white 30%);
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--b) 15%, transparent 85%);
+      border-color: color-mix(in srgb, var(--b) 90%, white 10%);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--b) 30%, transparent 70%);
     }
     .outline.today{ border-color: rgba(40,20,80,.12); }
 
