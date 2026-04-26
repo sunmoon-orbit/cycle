@@ -13,49 +13,218 @@
 
   <style>
     :root{
-      --bg:#E8E4DE; --card:#F5F2EE; --ink:#2E2E2E; --muted:#6E6A63; --line:#D7D1C9;
-      --a:#A3B18A; --r:22px; --shadow:0 10px 28px rgba(0,0,0,.08);
+      --bg:#E8E4DE;
+      --card:#F5F2EE;
+      --tile:#FFFFFF;
+      --ink:#2E2E2E;
+      --muted:#6E6A63;
+      --line:#D7D1C9;
+      --a:#A3B18A;
+      --r:22px;
+      --r-sm:16px;
+      --shadow:0 10px 28px rgba(0,0,0,.08);
+      --shadow-soft:0 4px 16px rgba(0,0,0,.05);
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Noto Sans SC",Arial,sans-serif}
-    .wrap{max-width:820px;margin:0 auto;padding:18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
-    .title{display:flex;gap:12px;align-items:center}
-    .logo{width:44px;height:44px;border-radius:14px;background:#fff;display:grid;place-items:center;border:1px solid var(--line)}
-    .h1{font-weight:800;font-size:18px}
-    .sub{color:var(--muted);font-size:13px;margin-top:2px}
-    .grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
 
-    a.btn{display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:14px 14px;border-radius:18px;background:#fff;border:1px solid var(--line);
-      text-decoration:none;color:var(--ink);font-weight:700}
-    a.btn .tag{color:var(--muted);font-weight:600}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Noto Sans SC",Arial,sans-serif;
+    }
+
+    .wrap{
+      max-width:860px;
+      margin:0 auto;
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .welcome{
+      display:grid;
+      gap:12px;
+      overflow:hidden;
+      position:relative;
+    }
+    .welcome::after{
+      content:"";
+      position:absolute;
+      right:-40px;
+      top:-40px;
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle at center, rgba(163,177,138,.18), rgba(163,177,138,0));
+      pointer-events:none;
+    }
+
+    .title{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      background:#fff;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      font-size:23px;
+      flex:none;
+    }
+    .h1{font-weight:800;font-size:20px;line-height:1.15}
+    .sub{color:var(--muted);font-size:13px;margin-top:2px}
+    .intro{color:#4b4945;font-size:14px;line-height:1.5}
+
+    .groupTitle{
+      font-size:14px;
+      color:var(--muted);
+      margin:2px 0 0;
+      font-weight:700;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    a.btn{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px;
+      border-radius:18px;
+      background:var(--tile);
+      border:1px solid var(--line);
+      text-decoration:none;
+      color:var(--ink);
+      box-shadow:var(--shadow-soft);
+      min-width:0;
+    }
+    .btnLeft{min-width:0}
+    .btnMain{font-weight:800;font-size:15px;line-height:1.2}
+    .btnSub{color:var(--muted);font-size:12px;margin-top:5px;line-height:1.35}
+    .arrow{color:var(--muted);font-size:16px;line-height:1.2;flex:none;padding-top:2px}
     a.btn:active{transform:translateY(1px)}
 
-    @media (min-width:700px){
+    .foot{
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      padding:10px 4px 2px;
+    }
+
+    .animate-in .anim-item{
+      opacity:0;
+      transform:translateY(10px);
+      animation:fadeUp .56s ease forwards;
+    }
+    .animate-in .welcome .logo{ animation-delay:.06s; }
+    .animate-in .welcome .h1,
+    .animate-in .welcome .sub{ animation-delay:.12s; }
+    .animate-in .welcome .intro{ animation-delay:.18s; }
+    .animate-in .tools{ animation-delay:.3s; }
+    .animate-in .tools .btn:nth-child(1){ animation-delay:.34s; }
+    .animate-in .tools .btn:nth-child(2){ animation-delay:.42s; }
+    .animate-in .tools .btn:nth-child(3){ animation-delay:.5s; }
+    .animate-in .tools .btn:nth-child(4){ animation-delay:.58s; }
+    .animate-in .foot{ animation-delay:.64s; }
+
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    @media (min-width:720px){
+      .wrap{padding:18px}
       .grid{grid-template-columns:1fr 1fr}
-      .grid a.btn:last-child{grid-column:1 / -1} /* ✅ 第三个按钮居中横跨两列 */
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      .animate-in .anim-item,
+      .animate-in .tools .btn{animation:none;opacity:1;transform:none}
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
+  <main class="wrap" id="homeRoot">
+    <section class="card welcome anim-item">
       <div class="title">
-        <div class="logo">🌞🌙</div>
+        <div class="logo anim-item">🌞🌙</div>
         <div>
-          <div class="h1">SunMoon</div>
-          <div class="sub">small pages, calm days.</div>
+          <div class="h1 anim-item">SunMoon Tools</div>
+          <div class="sub anim-item">small pages, calm days.</div>
         </div>
       </div>
+      <div class="intro anim-item">欢迎回来。把今天要用的小工具都放在这里：记录、抽签、答案之书和句子日记，轻轻一点就能进入。</div>
+    </section>
 
+    <section class="card tools anim-item">
+      <div class="groupTitle">工具入口</div>
       <div class="grid">
-        <a class="btn" href="./index.html">🌙 潮汐 <span class="tag">周期记录</span></a>
-        <a class="btn" href="./draw/index.html">🎴 抽签 <span class="tag">番茄钟联动</span></a>
-        <a class="btn" href="./vault/index.html">📚 十四行诗 <span class="tag">句子与日记</span></a>
+        <a class="btn anim-item" href="./index.html">
+          <div class="btnLeft">
+            <div class="btnMain">🌙 潮汐 / 周期记录</div>
+            <div class="btnSub">记录周期、查看节律，按日常节奏慢慢来。</div>
+          </div>
+          <span class="arrow">›</span>
+        </a>
+
+        <a class="btn anim-item" href="./draw/index.html">
+          <div class="btnLeft">
+            <div class="btnMain">🎴 抽签 / 番茄钟联动</div>
+            <div class="btnSub">随机抽签配合专注番茄钟，适合开始前定个小目标。</div>
+          </div>
+          <span class="arrow">›</span>
+        </a>
+
+        <a class="btn anim-item" href="./oracle/index.html">
+          <div class="btnLeft">
+            <div class="btnMain">🔮 Oracle / Answer Book / 答案之书</div>
+            <div class="btnSub">把问题交给答案之书，收到一条温柔回应。</div>
+          </div>
+          <span class="arrow">›</span>
+        </a>
+
+        <a class="btn anim-item" href="./vault/index.html">
+          <div class="btnLeft">
+            <div class="btnMain">📚 十四行诗 / 句子与日记</div>
+            <div class="btnSub">收藏句子、写下日记，把碎片心情归档成诗。</div>
+          </div>
+          <span class="arrow">›</span>
+        </a>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <div class="foot anim-item">提示：已为 PWA 场景优化站内同窗口跳转，首页与子页面都保持在同一个应用体验中。</div>
+  </main>
+
+  <script>
+    (function(){
+      const root = document.getElementById("homeRoot");
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReduced) return;
+
+      const key = "sunmoon_home_intro_once";
+      const hasPlayed = sessionStorage.getItem(key) === "1";
+      if (hasPlayed) return;
+
+      root.classList.add("animate-in");
+      sessionStorage.setItem(key, "1");
+    })();
+  </script>
 </body>
 </html>
