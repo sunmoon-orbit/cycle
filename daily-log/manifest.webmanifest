@@ -1,0 +1,19 @@
+{
+  "name": "小清记录本",
+  "short_name": "记录本",
+  "description": "本地吃药时间记录和简单记账工具。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#9fd8c6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
