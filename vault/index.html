@@ -499,6 +499,8 @@
     const K_META   = "sunmoon_vault_meta_v1";
     const K_DRAFT_Q = "sunmoon_vault_draft_quote_v1";
     const K_DRAFT_D = "sunmoon_vault_draft_diary_v1";
+    const K_QUOTES_BAK = "sunmoon_vault_quotes_v1_bak";
+    const K_DIARY_BAK  = "sunmoon_vault_diary_v1_bak";
 
     // --- Helpers ---
     const $ = (id)=>document.getElementById(id);
@@ -523,9 +525,20 @@
         .slice(0, 12);
     }
 
+    function readWithBak(key, bakKey, fallback){
+      const raw = localStorage.getItem(key);
+      const val = safeParse(raw, null);
+      if(Array.isArray(fallback) ? Array.isArray(val) : val !== null) return val;
+      const bak = safeParse(localStorage.getItem(bakKey), null);
+      if(Array.isArray(fallback) ? Array.isArray(bak) : bak !== null){
+        setTimeout(()=>toast("⚠️ 已从备份恢复，建议导出一次"), 800);
+        return bak;
+      }
+      return fallback;
+    }
     function readState(){
-      const quotes = safeParse(localStorage.getItem(K_QUOTES), []);
-      const diary  = safeParse(localStorage.getItem(K_DIARY), []);
+      const quotes = readWithBak(K_QUOTES, K_QUOTES_BAK, []);
+      const diary  = readWithBak(K_DIARY,  K_DIARY_BAK,  []);
       const meta   = safeParse(localStorage.getItem(K_META), { lastSaved:null });
       return { quotes, diary, meta };
     }
@@ -533,6 +546,8 @@
       localStorage.setItem(K_QUOTES, JSON.stringify(next.quotes));
       localStorage.setItem(K_DIARY,  JSON.stringify(next.diary));
       localStorage.setItem(K_META,   JSON.stringify(next.meta));
+      try{ localStorage.setItem(K_QUOTES_BAK, JSON.stringify(next.quotes)); }catch(e){}
+      try{ localStorage.setItem(K_DIARY_BAK,  JSON.stringify(next.diary));  }catch(e){}
       $("lastSaved").textContent = next.meta?.lastSaved ? ("已保存：" + new Date(next.meta.lastSaved).toLocaleString()) : "未保存";
       renderAll();
     }
@@ -972,3 +987,4 @@
   </script>
 </body>
 </html>
+
