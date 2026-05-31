@@ -623,19 +623,35 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
     }
 
     const STORE_KEY = "cute_cycle_tracker_v1";
+    const BACKUP_KEY = "cute_cycle_tracker_v1_bak";
     const DEFAULTS = { theme:"lavender", settings:{ avgN:6, window:2 }, records:[] };
+    function parseState(raw){
+      const parsed = JSON.parse(raw);
+      const st = { ...structuredClone(DEFAULTS), ...parsed };
+      st.settings = { ...structuredClone(DEFAULTS.settings), ...(parsed.settings||{}) };
+      st.records = Array.isArray(parsed.records) ? parsed.records.slice(0, 400) : [];
+      return st;
+    }
     function loadState(){
       try{
         const raw = localStorage.getItem(STORE_KEY);
-        if(!raw) return structuredClone(DEFAULTS);
-        const parsed = JSON.parse(raw);
-        const st = { ...structuredClone(DEFAULTS), ...parsed };
-        st.settings = { ...structuredClone(DEFAULTS.settings), ...(parsed.settings||{}) };
-        st.records = Array.isArray(parsed.records) ? parsed.records.slice(0, 400) : [];
-        return st;
-      }catch(e){ return structuredClone(DEFAULTS); }
+        if(raw) return parseState(raw);
+      }catch(e){}
+      try{
+        const bak = localStorage.getItem(BACKUP_KEY);
+        if(bak){
+          const st = parseState(bak);
+          setTimeout(()=>toast("已从备份恢复数据，请导出一次保存副本","⚠️"),800);
+          return st;
+        }
+      }catch(e){}
+      return structuredClone(DEFAULTS);
     }
-    function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+    function saveState(){
+      const json = JSON.stringify(state);
+      localStorage.setItem(STORE_KEY, json);
+      try{ localStorage.setItem(BACKUP_KEY, json); }catch(e){}
+    }
     let state = loadState();
 
     function sortByStartAsc(recs){ return recs.slice().sort((x,y)=> (x.start < y.start ? -1 : x.start > y.start ? 1 : 0)); }
@@ -1078,3 +1094,4 @@ button.danger:hover{ filter: brightness(.98) saturate(1.03); }
 
 </body>
 </html>
+
